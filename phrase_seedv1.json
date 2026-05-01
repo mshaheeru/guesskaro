@@ -1,0 +1,232 @@
+[
+  {
+    "urdu_phrase": "آٹے دال کا بھاؤ معلوم ہونا",
+    "romanised": "Aate daal ka bhaao maloom hona",
+    "category": "زندگی اور تجربہ",
+    "difficulty": "medium",
+    "example_sentence": "جب وہ اکیلا رہنے لگا تو اسے آٹے دال کا بھاؤ معلوم ہوا۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/aataydaalkabhaomaloomhona_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "آٹے دال کا بھاؤ معلوم ہونا",
+      "wrong": [
+        "آٹے دال کا فرق نہ جاننا",
+        "آٹے دال کے لالے پڑ جانا",
+        "آٹے دال میں ہاتھ رنگنا"
+      ]
+    },
+    "correct_meaning": "اصل قدر و قیمت اور زندگی کی مشکلات کا احساس ہونا",
+    "wrong_options": [
+      "غربت اور تنگ دستی کا شکار ہونا",
+      "اپنی غلطیوں کا کھلا اعتراف کرنا",
+      "دوسروں پر بوجھ بن جانا"
+    ]
+  },
+  {
+    "urdu_phrase": "آٹے کے ساتھ گھن بھی پسنا",
+    "romanised": "Aate ke saath ghun bhi pisna",
+    "category": "انصاف اور ناانصافی",
+    "difficulty": "hard",
+    "example_sentence": "کلاس میں چند بچوں کی وجہ سے سب کو سزا ملی، آٹے کے ساتھ گھن بھی پس گیا۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/ataykesathghunbhipisna_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "آٹے کے ساتھ گھن بھی پسنا",
+      "wrong": [
+        "آٹے میں گھن کا ملنا",
+        "گھن کی وجہ سے آٹا خراب ہونا",
+        "آٹے اور گھن کو الگ الگ کرنا"
+      ]
+    },
+    "correct_meaning": "قصوروار کے ساتھ بے گناہ کا بھی نقصان اٹھانا",
+    "wrong_options": [
+      "مل کر کام کرنے سے سب کو یکساں فائدہ ہونا",
+      "مشکل گھڑی میں کوئی ساتھ نہ دینا",
+      "طاقتور کے ساتھ ہونے سے کمزور کو بھی عزت ملنا"
+    ]
+  },
+  {
+    "urdu_phrase": "آدھا تیتر آدھا بٹیر",
+    "romanised": "Aadha teetar aadha batair",
+    "category": "شخصیت اور کردار",
+    "difficulty": "medium",
+    "example_sentence": "یہ پروجیکٹ آدھا تیتر آدھا بٹیر لگ رہا ہے۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/AdhaTeeteradhabatayr_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "آدھا تیتر آدھا بٹیر",
+      "wrong": [
+        "آدھا شیر آدھا گیدڑ",
+        "آدھا کالا آدھا گورا",
+        "آدھا جاگنا آدھا سونا"
+      ]
+    },
+    "correct_meaning": "ادھورا یا ملا جلا اور غیر واضح ہونا",
+    "wrong_options": [
+      "بزدل اور کم ہمت ہونا",
+      "دھوکے باز اور مکار ہونا",
+      "نہایت سست اور کاہل ہونا"
+    ]
+  },
+  {
+    "urdu_phrase": "اڑھائی دن کی بادشاہت",
+    "romanised": "Adhai din ki baadshahat",
+    "category": "کامیابی اور اقتدار",
+    "difficulty": "easy",
+    "example_sentence": "اس کی شہرت اڑھائی دن کی بادشاہت ثابت ہوئی۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/Arhaidinkibadshahat_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "اڑھائی دن کی بادشاہت",
+      "wrong": [
+        "تخت و تاج کا خواب دیکھنا",
+        "بادشاہ کی نظروں میں آ جانا",
+        "تخت کا وارث ٹھہرایا جانا"
+      ]
+    },
+    "correct_meaning": "بہت قلیل مدت کی کامیابی یا اقتدار",
+    "wrong_options": [
+      "ناجائز طریقے سے اقتدار حاصل کرنا",
+      "جھوٹی امارت اور شان و شوکت کا دکھاوا کرنا",
+      "دوسروں کا حق چھین کر آگے بڑھنا"
+    ]
+  },
+  {
+    "urdu_phrase": "اشرفیاں لٹیں اور کوئلوں پر مہر",
+    "romanised": "Ashrafiyaan luteen aur koylo par mohr",
+    "category": "حماقت اور نادانی",
+    "difficulty": "hard",
+    "example_sentence": "گھر میں بڑا نقصان ہوا مگر وہ معمولی باتوں میں الجھے رہے، اشرفیاں لٹیں اور کوئلوں پر مہر۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/ashrafianlotenkoyelonparmuhar_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "اشرفیاں لٹیں اور کوئلوں پر مہر",
+      "wrong": [
+        "اشرفیوں کے بدلے کوئلے مانگنا",
+        "اشرفیاں جمع کر کے کوئلے خریدنا",
+        "کوئلوں کو اشرفی سمجھ لینا"
+      ]
+    },
+    "correct_meaning": "بڑی چیز کے نقصان پر چھوٹی اور بے کار چیز پر توجہ دینا",
+    "wrong_options": [
+      "بڑے نقصان کو چھپانے کی ناکام کوشش کرنا",
+      "چھوٹے فائدے کے لیے بڑی قربانی دینا",
+      "مصیبت میں ہمت ہار کر بیٹھ جانا"
+    ]
+  },
+  {
+    "urdu_phrase": "آسمان میں چھید کرنا",
+    "romanised": "Aasmaan mein chhaid karna",
+    "category": "کوشش اور ناممکن",
+    "difficulty": "medium",
+    "example_sentence": "اتنے کم وقت میں یہ کام مکمل کرنا آسمان میں چھید کرنے کے برابر ہے۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/asmanmainchaydkarna_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "آسمان میں چھید کرنا",
+      "wrong": [
+        "آسمان کو زمین پر لانا",
+        "آسمان سے باتیں کرنا",
+        "آسمان کا سینہ چیرنا"
+      ]
+    },
+    "correct_meaning": "ناممکن یا انتہائی مشکل کام کرنے کی کوشش کرنا",
+    "wrong_options": [
+      "بہت اونچے اور ناقابلِ یقین خواب دیکھنا",
+      "محنت اور لگن سے بڑی کامیابی حاصل کرنا",
+      "دوسروں پر اپنی برتری ثابت کرنا"
+    ]
+  },
+  {
+    "urdu_phrase": "آنکھوں سے گرانا",
+    "romanised": "Aankhon se girana",
+    "category": "عزت اور وقار",
+    "difficulty": "medium",
+    "example_sentence": "اس کے جھوٹ کے بعد وہ سب کی نظروں سے گر گیا۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/aankhonsegirana_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "آنکھوں سے گرانا",
+      "wrong": [
+        "آنکھوں میں جگہ بنانا",
+        "آنکھوں سے آنسو بہانا",
+        "آنکھوں کا نور بن جانا"
+      ]
+    },
+    "correct_meaning": "کسی کی عزت ختم کر دینا یا اس کی قدر کم ہو جانا",
+    "wrong_options": [
+      "کسی کو شدید جسمانی تکلیف پہنچانا",
+      "کسی سے ہمیشہ کے لیے ناطہ توڑ لینا",
+      "کسی کو سخت سزا دینا"
+    ]
+  },
+  {
+    "urdu_phrase": "آنکھوں پر پٹی باندھ لینا",
+    "romanised": "Aankhon par patti baandh lena",
+    "category": "غفلت اور انکار",
+    "difficulty": "medium",
+    "example_sentence": "وہ سچ جانتے ہوئے بھی آنکھوں پر پٹی باندھ لیتا ہے۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/aankhonparthekrirakhlena_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "آنکھوں پر پٹی باندھ لینا",
+      "wrong": [
+        "منہ پر تالہ لگانا",
+        "دل پر پتھر رکھنا",
+        "پیروں میں بیڑیاں ڈالنا"
+      ]
+    },
+    "correct_meaning": "جان بوجھ کر حقیقت کو نظر انداز کرنا",
+    "wrong_options": [
+      "کسی کو جان بوجھ کر دھوکے میں رکھنا",
+      "خوف کی وجہ سے کچھ نہ کر پانا",
+      "بغیر سوچے سمجھے آگے بڑھتے رہنا"
+    ]
+  },
+  {
+    "urdu_phrase": "آنکھوں میں کھٹکنا",
+    "romanised": "Aankhon mein khatakna",
+    "category": "حسد اور ناپسندیدگی",
+    "difficulty": "easy",
+    "example_sentence": "اس کی کامیابی کچھ لوگوں کو آنکھوں میں کھٹک رہی ہے۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/aankhonmainkhatakna_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "آنکھوں میں کھٹکنا",
+      "wrong": [
+        "آنکھوں میں سمانا",
+        "آنکھوں کا نور بننا",
+        "آنکھوں میں بسنا"
+      ]
+    },
+    "correct_meaning": "کسی کو ناپسند ہونا یا کھلنا",
+    "wrong_options": [
+      "کسی کی بہت تعریف اور توصیف ہونا",
+      "کسی کی کمی شدت سے محسوس ہونا",
+      "کسی سے دل و جان سے محبت ہونا"
+    ]
+  },
+  {
+    "urdu_phrase": "آنکھیں چرانا",
+    "romanised": "Aankhein churana",
+    "category": "شرمندگی اور خوف",
+    "difficulty": "easy",
+    "example_sentence": "غلطی کے بعد وہ سب سے آنکھیں چرانے لگا۔",
+    "image_url": "https://ajfkrbfbrtdxrdqirynm.supabase.co/storage/v1/object/public/phrase-images/AnkhaynChurana_photo.png",
+    "reveal_url": "",
+    "phrase_options": {
+      "correct": "آنکھیں چرانا",
+      "wrong": [
+        "آنکھیں بند کر لینا",
+        "آنکھیں نچانا",
+        "آنکھیں مٹکانا"
+      ]
+    },
+    "correct_meaning": "شرمندگی یا خوف کی وجہ سے سامنا کرنے سے بچنا",
+    "wrong_options": [
+      "کسی کو دیکھ کر بہت خوش ہونا",
+      "غصے میں کسی کو سرخ آنکھوں سے گھورنا",
+      "کسی سے دل لگا بیٹھنا"
+    ]
+  }
+]

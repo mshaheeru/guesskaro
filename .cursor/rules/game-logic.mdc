@@ -1,0 +1,34 @@
+---
+description: Jhat Pat game logic rules — scoring, state machine, hints
+globs: lib/providers/game_provider.dart,lib/screens/game/**/*.dart
+alwaysApply: false
+---
+
+# Jhat Pat Game Rules
+
+## Game State Machine
+- `GameNotifier` is the single source of truth — no game logic outside it
+- Phase transitions are one-way within a round: `showingPhoto → showingResultFlash → showingReveal`
+- Only `GameNotifier` changes `GamePhase` — UI only reads it
+- Timer is cancelled immediately on any answer (correct, wrong, or hint usage)
+- `proceedToNextCard()` must reset: `eliminatedIndices`, `hintsUsed`, `isTimerFrozen`
+
+## Scoring
+- Points calculated only via `ScoringConstants.calculatePoints()` — no inline math
+- Streak multiplier applied only via `ScoringConstants.applyStreakMultiplier()`
+- Streak resets to 0 on wrong answer or timeout — never decrements
+- Coins deducted before hint is applied — if deduction fails, hint does not apply
+
+## Hints
+- Max 1 eliminate hint per card, max 1 freeze hint per card
+- Eliminate: keeps `correctAnswerIndex` option + 1 random wrong — removes the other 2
+- Freeze: sets `isTimerFrozen = true` for exactly `ScoringConstants.freezeDurationSeconds`
+- Eliminated tile indices stored in `GameState.eliminatedIndices` (Set<int>)
+- Both hint buttons disabled once that hint type is used this card
+
+## Session End
+- `endSession()` called only once — guard against double calls
+- Writes to Supabase happen in `endSession()`, never in the UI
+- If Supabase write fails: save to Hive `pending_sessions` box, retry on next launch
+- `levelUpProvider` set to true inside `profileProvider.awardXpAndCoins()` when level increases
+- `levelUpProvider` reset to false only when user dismisses the level-up overlay

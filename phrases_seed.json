@@ -1,0 +1,244 @@
+{
+  "phrases": [
+    {
+      "urdu_phrase": "طوطے اڑ جانا",
+      "romanised": "Totay ur jana",
+      "category": "محاورہ",
+      "difficulty": "آسان",
+      "example_sentence": "جب اسے خبر ملی تو اس کے طوطے اڑ گئے",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "حیران و پریشان رہ جانا",
+      "wrong_options": [
+        "بہت خوش اور مسرور ہو جانا",
+        "شدید غصے میں آ جانا",
+        "اداس اور مایوس ہو جانا"
+      ]
+    },
+    {
+      "urdu_phrase": "ہاتھ صاف کرنا",
+      "romanised": "Hath saaf karna",
+      "category": "محاورہ",
+      "difficulty": "آسان",
+      "example_sentence": "وہ موقع ملتے ہی ہاتھ صاف کر گیا",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "چوری کرنا یا کوئی چیز غائب کر دینا",
+      "wrong_options": [
+        "کسی معاملے سے بالکل الگ ہو جانا",
+        "کام ختم کر کے فارغ ہو جانا",
+        "کسی کو سبق سکھانا یا سزا دینا"
+      ]
+    },
+    {
+      "urdu_phrase": "دانتوں تلے انگلی دبانا",
+      "romanised": "Danton talay ungli dabana",
+      "category": "محاورہ",
+      "difficulty": "درمیانہ",
+      "example_sentence": "اس کا کام دیکھ کر سب نے دانتوں تلے انگلی دبا لی",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "بہت زیادہ حیران ہونا",
+      "wrong_options": [
+        "شرمندگی سے پانی پانی ہو جانا",
+        "بہت زیادہ خوف زدہ ہو جانا",
+        "غصے سے کانپنے لگنا"
+      ]
+    },
+    {
+      "urdu_phrase": "آنکھوں کا تارا ہونا",
+      "romanised": "Ankhon ka tara hona",
+      "category": "محاورہ",
+      "difficulty": "آسان",
+      "example_sentence": "یہ بچہ اپنے والدین کی آنکھوں کا تارا ہے",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "بہت عزیز اور پیارا ہونا",
+      "wrong_options": [
+        "بہت ذہین اور قابل ہونا",
+        "بہت خوبصورت اور دلکش ہونا",
+        "گھر میں سب سے بڑا اور ذمہ دار ہونا"
+      ]
+    },
+    {
+      "urdu_phrase": "رگوں میں بس جانا",
+      "romanised": "Ragon mein bas jana",
+      "category": "محاورہ",
+      "difficulty": "مشکل",
+      "example_sentence": "اس کی آواز میری رگوں میں بس گئی ہے",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "دل و جان میں گہرائی سے سما جانا",
+      "wrong_options": [
+        "انتہائی تھکاوٹ اور کمزوری محسوس کرنا",
+        "کسی چیز سے شدید نفرت ہو جانا",
+        "جسم میں بیماری پھیل جانا"
+      ]
+    },
+    {
+      "urdu_phrase": "چکا چوند ہونا",
+      "romanised": "Chaka chaund hona",
+      "category": "محاورہ",
+      "difficulty": "درمیانہ",
+      "example_sentence": "شہر کی روشنیاں دیکھ کر وہ چکا چوند ہو گیا",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "تیز روشنی یا شان و شوکت سے حیران ہو جانا",
+      "wrong_options": [
+        "تھکاوٹ اور نیند سے چکرا جانا",
+        "گھبراہٹ میں کچھ سمجھ نہ آنا",
+        "اچانک خوف سے ہوش اڑ جانا"
+      ]
+    },
+    {
+      "urdu_phrase": "آگ بگولہ ہونا",
+      "romanised": "Aag bagola hona",
+      "category": "محاورہ",
+      "difficulty": "آسان",
+      "example_sentence": "بات سن کر وہ آگ بگولہ ہو گیا",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "بہت زیادہ غصے میں آ جانا",
+      "wrong_options": [
+        "بہت زیادہ خوشی سے پھولے نہ سمانا",
+        "شدید محبت میں گرفتار ہو جانا",
+        "ڈر اور خوف سے کانپنے لگنا"
+      ]
+    },
+    {
+      "urdu_phrase": "باغ باغ ہونا",
+      "romanised": "Bagh bagh hona",
+      "category": "محاورہ",
+      "difficulty": "آسان",
+      "example_sentence": "خوشخبری سن کر وہ باغ باغ ہو گئے",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "بہت خوش اور مسرور ہونا",
+      "wrong_options": [
+        "بہت غصے میں آ جانا",
+        "حیران و پریشان رہ جانا",
+        "شرمندگی سے پانی پانی ہونا"
+      ]
+    },
+    {
+      "urdu_phrase": "اونچی دکان پھیکا پکوان",
+      "romanised": "Oonchi dukan pheeka pakwan",
+      "category": "کہاوت",
+      "difficulty": "درمیانہ",
+      "example_sentence": "اس ہوٹل کا کھانا بے ذائقہ نکلا — اونچی دکان پھیکا پکوان",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "ظاہری دکھاوا زیادہ، اصلیت میں کچھ نہیں",
+      "wrong_options": [
+        "مہنگی چیز ہمیشہ اچھی ہوتی ہے",
+        "غریب آدمی کا امیروں جیسا خواب دیکھنا",
+        "ہر چیز میں سے بہترین چننا اور باقی چھوڑنا"
+      ]
+    },
+    {
+      "urdu_phrase": "آگ لگنے پر کنواں کھودنا",
+      "romanised": "Aag lagne par kuwan khodna",
+      "category": "کہاوت",
+      "difficulty": "درمیانہ",
+      "example_sentence": "امتحان کے دن پڑھنا شروع کرنا آگ لگنے پر کنواں کھودنا ہے",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "مصیبت آنے کے بعد تیاری کرنا",
+      "wrong_options": [
+        "بغیر سوچے سمجھے کوئی قدم اٹھانا",
+        "دوسروں کی مصیبت میں فائدہ اٹھانا",
+        "بہت جلدی میں کام کر کے غلطیاں کرنا"
+      ]
+    },
+    {
+      "urdu_phrase": "آستین کا سانپ ہونا",
+      "romanised": "Asteen ka sanp hona",
+      "category": "محاورہ",
+      "difficulty": "درمیانہ",
+      "example_sentence": "وہ دوست نہیں نکلا، آستین کا سانپ ثابت ہوا",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "اپنا بن کر نقصان پہنچانے والا ہونا",
+      "wrong_options": [
+        "کسی کو ڈرا کر اپنا کام کروانا",
+        "ہر وقت خوف میں رہنے والا بزدل شخص",
+        "چھپ کر دوسروں کی باتیں سننے والا"
+      ]
+    },
+    {
+      "urdu_phrase": "گڑے مردے اکھاڑنا",
+      "romanised": "Ghairay murday ukharna",
+      "category": "محاورہ",
+      "difficulty": "درمیانہ",
+      "example_sentence": "ہر بحث میں گڑے مردے اکھاڑنا اچھی بات نہیں",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "پرانی باتیں چھیڑ دینا",
+      "wrong_options": [
+        "مرے ہوئے لوگوں کو یاد کر کے رونا",
+        "پرانی چیزیں جمع کرنے کا شوق رکھنا",
+        "قبرستان میں جا کر دعا مانگنا"
+      ]
+    },
+    {
+      "urdu_phrase": "ہاتھ پاؤں مارنا",
+      "romanised": "Hath paoun marna",
+      "category": "محاورہ",
+      "difficulty": "آسان",
+      "example_sentence": "نوکری کے لیے اس نے بہت ہاتھ پاؤں مارے",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "بہت کوشش کرنا",
+      "wrong_options": [
+        "لڑائی جھگڑے میں پڑ جانا",
+        "تیراکی کرتے ہوئے ڈوبنے لگنا",
+        "کسی کو مار پیٹ کر ڈرانا"
+      ]
+    },
+    {
+      "urdu_phrase": "کان کھڑے ہونا",
+      "romanised": "Kaan kharay hona",
+      "category": "محاورہ",
+      "difficulty": "آسان",
+      "example_sentence": "مشکوک آواز سنتے ہی اس کے کان کھڑے ہو گئے",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "چوکنا یا ہوشیار ہو جانا",
+      "wrong_options": [
+        "بہت تیز آواز سن کر کان بند کر لینا",
+        "کسی کی چغلی کھانا اور راز بتانا",
+        "سننے میں دشواری محسوس کرنا"
+      ]
+    },
+    {
+      "urdu_phrase": "ناک میں دم کرنا",
+      "romanised": "Naak main dam karna",
+      "category": "محاورہ",
+      "difficulty": "آسان",
+      "example_sentence": "بچوں نے شور مچا کر سب کی ناک میں دم کر دیا",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "بہت تنگ کرنا",
+      "wrong_options": [
+        "کسی کو بہت زیادہ خوش کر دینا",
+        "گھر میں خوشبو اور رونق پھیلا دینا",
+        "کسی کی بہت زیادہ تعریف کرنا"
+      ]
+    },
+    {
+      "urdu_phrase": "پیٹھ پیچھے بات کرنا",
+      "romanised": "Peet pichay baat karna",
+      "category": "محاورہ",
+      "difficulty": "درمیانہ",
+      "example_sentence": "دوستوں کی پیٹھ پیچھے بات کرنا غلط ہے",
+      "image_url": "",
+      "reveal_url": "",
+      "correct_meaning": "غیر موجودگی میں برائی کرنا",
+      "wrong_options": [
+        "کسی کی مدد خفیہ طور پر کرنا",
+        "منہ پر تعریف اور پیٹھ پیچھے بھی تعریف کرنا",
+        "کسی کے راز کو ہمیشہ چھپا کر رکھنا"
+      ]
+    }
+  ]
+}

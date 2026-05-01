@@ -1,0 +1,35 @@
+---
+description: Dart style, performance, and code quality rules
+globs: "**/*.dart"
+alwaysApply: false
+---
+
+# Dart Style & Performance Rules
+
+## Code Style
+- Use `early returns` to avoid deep nesting — happy path last
+- Prefer `final` over `var` for everything that doesn't reassign
+- Use `??` and `?.` operators instead of null checks where readable
+- No commented-out code — delete it
+- No TODO comments in committed code — either do it now or create a task
+
+## Async
+- Always use `async/await` — no raw `.then()` chains
+- Never `await` inside a `build()` method — use providers or `FutureBuilder`
+- `FutureBuilder` only for one-off reads — prefer Riverpod `AsyncNotifier` for anything with state
+
+## Performance
+- All list items in `ListView`/`GridView` must use `ListView.builder` — never `ListView(children: [...])`  for dynamic content
+- Use `const` widgets aggressively — if a widget has no dynamic data, it must be `const`
+- Never call `setState()` from a parent to rebuild a child — extract the child widget instead
+- Avoid `Opacity(opacity: 0)` to hide widgets — use `Visibility` or `offstage`
+
+## Typing
+- No `dynamic` types — ever
+- No implicit `var` on class fields — always typed explicitly
+- Nullable types (`String?`) only when null is a genuinely valid state
+
+## Tests
+- Every repository method must have a unit test
+- Scoring logic in `ScoringConstants` must be fully tested
+- Widget tests for at minimum: `McqOptionTile`, `CountdownTimerBar`, `XpProgressBar`

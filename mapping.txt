@@ -1,0 +1,17 @@
+Phrase (from scope) | Photo File | Reveal File | Notes
+آگ بگولہ ہونا (Aag bagola hona) | aagbagola_photo.png | aagbagola_reveal.png | matched and uploaded
+آگ لگنے پر کنواں کھودنا (Aag lagne par kuwan khodna) | aaglagneypr_photo.png | (missing) | reveal not found in folder/bucket
+آنکھوں کا تارا ہونا (Ankhon ka tara hona) | ankhonkatara_photo.png | ankhonkatara_reveal.png | matched and uploaded
+آستین کا سانپ ہونا (Asteen ka sanp hona) | asteenkasanp_photo.png | asteenkasapn_reveal.png | reveal filename typo (sanp -> sapn) but uploaded
+باغ باغ ہونا (Bagh bagh hona) | baghbagh_photo.png | baghbagh_reveal.png | matched and uploaded
+چکا چوند ہونا (Chaka chaund hona) | chakachond_photo.png | chakachond_reveal.png | matched and uploaded
+گڑے مردے اکھاڑنا (Gharay murday ukharna) | gharaymurday_photo.png | gharaymundary_reveal.png | reveal filename variant (murday -> mundary) but uploaded
+ہاتھ پاؤں مارنا (Hath paoun marna) | hathpaoun_photo.png | hathpaoun_reveal.png | matched and uploaded
+ہاتھ صاف کرنا (Hath saaf karna) | hathsaafkarna_photo.png | hathsaafkarna_reveal.png | matched and uploaded
+کان کھڑے ہونا (Kaan kharay hona) | kaankharayhona_photo.png | kaankharayhona_reveal.png | matched and uploaded
+ناک میں دم کرنا (Naak main dam karna) | naakmaindam_photo.png | naakmaindam_reveal.png | matched and uploaded
+اونچی دکان پھیکا پکوان (Oonchi dukan pheeka pakwan) | pakwan_photo.png | (missing) | reveal not found in folder/bucket
+پیٹھ پیچھے بات کرنا (Peet pichay baat karna) | peetpichay_photo.png | peetpichay_reveal.png | matched and uploaded
+رگوں میں بس جانا (Ragon mein bas jana) | ragonmain_photo.png | ragomain_reveal.png | reveal filename variant (ragonmain -> ragomain) but uploaded
+طوطے اڑ جانا (Totay ur jana) | totayurhjana_photo.png | totayurhjana_reveal.png | matched and uploaded
+دانتوں تلے انگلی دبانا (Danton talay ungli dabana) | unglichabana_photo.png | unglichabana_reveal.png | matched and uploaded

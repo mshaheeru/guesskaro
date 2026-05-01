@@ -1,0 +1,36 @@
+---
+description: Supabase integration rules — queries, auth, storage, RLS
+globs: lib/data/**/*.dart
+alwaysApply: false
+---
+
+# Supabase Rules
+
+## General
+- Supabase client is accessed via `supabase.instance.client` — never instantiate a new client
+- All Supabase calls live in `lib/data/repositories/` — zero exceptions
+- Always `await` Supabase calls — never fire and forget
+
+## Queries
+- Always filter by `is_active = true` when querying `phrases`
+- Always scope user queries with `user_id = auth.uid()` — never fetch all users' data
+- Use `.upsert()` with `onConflict` for `user_progress` (unique on `user_id, phrase_id`)
+- Use `Future.wait([])` for parallel writes — never await in a loop
+
+## Auth
+- Guest login: `supabase.auth.signInAnonymously()`
+- Google login: `supabase.auth.signInWithOAuth(OAuthProvider.google)`
+- On sign out: call `cacheService.clearAll()` before signing out
+- Check `supabase.auth.currentUser` for auth state — never cache auth state manually
+- Create profile row immediately after first sign-in if it doesn't exist
+
+## Storage
+- Bucket: `phrase-images` (public)
+- Image URL format: `https://[project].supabase.co/storage/v1/object/public/phrase-images/[phrase_id].png`
+- Optional CDN resize (Pro / dashboard-enabled transforms): `.env` `SUPABASE_IMAGE_TRANSFORMS=true` — handled in `supabase_storage_image_url.dart`; default off so object URLs keep working on free tier
+- Never upload images at runtime — all images are pre-uploaded by the dev team
+
+## Error Handling
+- Catch `PostgrestException` separately from general exceptions
+- On Supabase failure: return cached data if available, throw readable exception if not
+- Never expose raw Supabase error messages to the UI — map to Urdu user-facing messages

@@ -1,0 +1,44 @@
+---
+description: Core Flutter development rules for Jhat Pat
+globs: 
+alwaysApply: true
+---
+
+# Flutter Core Rules
+
+## General
+- Use Flutter 3.x stable channel only
+- Every widget file exports exactly one primary widget
+- No logic in UI files — UI renders state, nothing else
+- Prefer `StatelessWidget`. Use `StatefulWidget` only when local UI state is unavoidable (e.g. animations, focus)
+- Use `const` constructors everywhere possible
+- Never use `print()` — use `debugPrint()` in dev, remove before release
+
+## Naming
+- Files: `snake_case.dart`
+- Classes/Widgets: `PascalCase`
+- Variables/methods: `camelCase`
+- Constants: `camelCase` (not SCREAMING_CASE)
+- Private members: `_prefixWithUnderscore`
+
+## Widgets
+- Keep `build()` methods under 50 lines — extract sub-widgets aggressively
+- Never nest more than 3 levels deep without extracting a widget
+- All extracted widgets go in `lib/widgets/` or alongside their screen in a `widgets/` subfolder
+- Use `SizedBox` for spacing, never `Padding` with zero content
+- Use `SizedBox.shrink()` instead of `Container()` for invisible widgets
+
+## Urdu / RTL Text
+- ALL Urdu text must use the `UrduText` widget from `lib/widgets/common/urdu_text.dart`
+- Never hardcode a Urdu string directly into a `Text()` widget
+- All Urdu strings live in `lib/core/constants/app_strings.dart`
+- Numbers shown in Urdu context must use `toUrduNumerals()` from `lib/core/constants/urdu_utils.dart`
+
+## Images
+- Always use `CachedNetworkImage` for network images — never `Image.network()`
+- Always provide a `placeholder` (shimmer) and `errorWidget` (grey box + 🖼 emoji)
+
+## Error Handling
+- Wrap all async calls in `try/catch`
+- On catch: fall back gracefully (cached data, empty state) — never crash
+- Show user-facing errors in Urdu via `ErrorState` widget, not raw exception messages

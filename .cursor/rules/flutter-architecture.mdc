@@ -1,0 +1,49 @@
+---
+description: Architecture, folder structure, and Riverpod state management rules
+globs: lib/**/*.dart
+alwaysApply: false
+---
+
+# Architecture Rules
+
+## Folder Structure — Non-Negotiable
+```
+lib/core/          → constants, theme, router (no business logic)
+lib/data/models/   → pure Dart data classes only
+lib/data/repositories/ → all Supabase calls live here, nowhere else
+lib/data/local/    → Hive cache only
+lib/providers/     → all Riverpod providers
+lib/screens/       → one folder per screen
+lib/widgets/       → reusable widgets only
+```
+- Screens never call Supabase directly — always through a repository
+- Repositories never know about UI — they return models or throw exceptions
+
+## Riverpod
+- Use `flutter_riverpod` — no other state solution
+- Provider types: `Provider` (sync read-only), `AsyncNotifierProvider` (async with loading/error states), `NotifierProvider` (sync mutable state), `StateProvider` (simple single value)
+- Always use `ref.watch` in build, `ref.read` in callbacks
+- Never use `ref.watch` inside `initState` or callbacks
+- Expose providers at the bottom of the file they belong to
+- One provider file per feature domain — no god provider files
+
+## Data Flow
+```
+UI (screen/widget)
+  → watches Provider
+    → Provider calls Repository
+      → Repository calls Supabase / Hive
+```
+This is the only allowed direction. Never reverse it.
+
+## Models
+- All models are immutable — use `copyWith` for updates
+- `fromJson` / `toJson` on every model
+- No business logic in models — computed getters only (no side effects)
+- Snake_case JSON keys map to camelCase Dart fields
+
+## Navigation
+- Use GoRouter only — no `Navigator.push` anywhere
+- All routes defined in `lib/core/router/app_router.dart`
+- Navigate with `context.go()` or `context.push()`, never `Navigator.of(context)`
+- No back navigation mid-game (`/game/*`) — use `PopScope` with exit dialog
