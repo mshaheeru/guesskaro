@@ -15,11 +15,14 @@ import '../../providers/auth_provider.dart';
 import '../../providers/local_guest_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../providers/session_user_provider.dart';
+import '../../core/navigation/main_bottom_tab_nav.dart';
+import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/jp_button_ghost.dart';
 import '../../widgets/xp_bar.dart';
 import '../../widgets/common/loading_shimmer.dart';
 import '../../widgets/common/error_state.dart';
 import '../../widgets/common/empty_state.dart';
+import '../../widgets/common/urdu_text.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -48,24 +51,18 @@ class ProfileScreen extends ConsumerWidget {
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 4,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  IconButton(
-                    onPressed: () {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.go('/home');
-                      }
-                    },
-                    icon: const Icon(Icons.arrow_back_rounded),
-                  ),
-                  IconButton(
-                    onPressed: () => context.go('/settings'),
-                    icon: const Icon(Icons.settings_rounded),
-                  ),
-                ],
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/home');
+                    }
+                  },
+                  icon: const Icon(Icons.arrow_back_rounded),
+                ),
               ),
             ),
             if (profileAsync.hasError) ...[
@@ -125,9 +122,16 @@ class ProfileScreen extends ConsumerWidget {
                     Text(profile.displayName, style: AppTextStyles.enTitle),
                     Text(
                       tierLabel,
-                      style: AppTextStyles.urduBody.copyWith(
-                        color: AppColors.orange,
-                      ),
+                      style:
+                          s.isEnglish
+                              ? AppTextStyles.enBody.copyWith(
+                                  color: AppColors.orange,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                )
+                              : AppTextStyles.urduBody.copyWith(
+                                  color: AppColors.orange,
+                                ),
                     ),
                     const SizedBox(height: 16),
                     XpBar(
@@ -177,7 +181,7 @@ class ProfileScreen extends ConsumerWidget {
                       s,
                       emoji: '✅',
                       valueRaw: 87,
-                      label: 'Correct',
+                      label: s.statCorrectRate,
                       color: AppColors.correct,
                       suffix: '%',
                     ),
@@ -188,7 +192,7 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               s.recentSessions,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: AppTextStyles.enTitle.copyWith(fontSize: 20),
             ),
             const SizedBox(height: 8),
             FutureBuilder<List<SessionModel>>(
@@ -225,17 +229,27 @@ class ProfileScreen extends ConsumerWidget {
                                 horizontal: 12,
                                 vertical: 4,
                               ),
-                              title: Text(
-                                sess.mode,
-                                style: AppTextStyles.enBody.copyWith(
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
+                              title:
+                                  s.isEnglish
+                                      ? Text(
+                                        s.sessionModeDisplay(sess.mode),
+                                        style: AppTextStyles.enBody.copyWith(
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      )
+                                      : UrduText(
+                                        s.sessionModeDisplay(sess.mode),
+                                        style: AppTextStyles.urduBody.copyWith(
+                                          color: AppColors.textPrimary,
+                                        ),
+                                        textAlign: TextAlign.right,
+                                      ),
                               subtitle: Text(
                                 '${sess.completedAt.toLocal()}'
                                     .split('.')
                                     .first,
                                 maxLines: 1,
+                                style: AppTextStyles.enCaption,
                               ),
                               trailing: Text(
                                 _pointsLine(s, sess),
@@ -256,6 +270,13 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavBar(
+        selectedIndex: 1,
+        labelHome: s.navHome,
+        labelProfile: s.navProfile,
+        labelSettings: s.navSettings,
+        onTap: (int i) => navigateMainBottomTab(context, i),
       ),
     );
   }
@@ -293,7 +314,12 @@ class ProfileScreen extends ConsumerWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            Text(label, style: AppTextStyles.enCaption),
+            Text(
+              label,
+              style: AppTextStyles.enCaption.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ],
         ),
       ),

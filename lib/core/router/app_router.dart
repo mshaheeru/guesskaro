@@ -10,6 +10,7 @@ import '../../screens/auth/sign_up_screen.dart';
 import '../../screens/game/photo_card_screen.dart';
 import '../../screens/game/reveal_card_screen.dart';
 import '../../screens/game/session_summary_screen.dart';
+import '../../screens/actors/meet_actors_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/leaderboard/leaderboard_screen.dart';
 import '../../screens/library/phrase_library_screen.dart';
@@ -53,6 +54,11 @@ class AppRouter {
         path: '/home',
         name: 'home',
         builder: (_, __) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/meet-actors',
+        name: 'meet-actors',
+        builder: (_, __) => const MeetActorsScreen(),
       ),
       GoRoute(
         path: '/leaderboard',

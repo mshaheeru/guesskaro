@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_strings.dart';
+import '../../core/constants/scoring_constants.dart';
 import '../../core/constants/urdu_utils.dart';
 import '../../providers/locale_provider.dart';
 
@@ -98,8 +100,11 @@ class UiStrings {
       isEnglish ? 'Enter a valid email.' : 'درست ای میل لکھیں۔';
   String get authCheckEmailConfirm =>
       isEnglish
-          ? 'Confirm your email from the link we sent, then sign in.'
-          : 'بھیجے گئے لنک سے ای میل تصدیق کریں، پھر سائن اِن کریں۔';
+          ? 'This project requires email confirmation. Ask admin to disable it'
+              ' under Supabase Dashboard → Authentication → Providers → Email'
+              ' (turn off Confirm email); then tap Sign in.'
+          : 'منتظم سے کہیں کہ Supabase ڈیش بورڈ میں ای میل تصدیق بند ہو؛'
+              ' پھر \'سائن اِن\' کریں۔';
   String get authSignInFailed =>
       isEnglish
           ? 'Could not sign in. Check email and password.'
@@ -125,7 +130,6 @@ class UiStrings {
   String get playerFallback => isEnglish ? 'Player' : 'کھلاڑی';
   String get homeTitle => isEnglish ? 'GuessKaro' : 'گیس کرو';
   String get quickPlay => isEnglish ? 'Quick play' : 'فوری کھیل';
-  String get learnMode => isEnglish ? 'Learn' : 'سیکھو';
   String get speedRound => isEnglish ? 'Speed round' : 'تیز راؤنڈ';
   String get categoryMode => isEnglish ? 'Category' : 'زمرہ';
   String speedLockedLabel(int levelNeeded) =>
@@ -135,11 +139,110 @@ class UiStrings {
 
   String get streakLabelPrefix => isEnglish ? '🔥 Streak:' : '🔥 سٹریک:';
   String get dailyGoalInline => isEnglish ? 'Today\'s goal:' : 'آج کا ہدف:';
+  String get leaderboardTileSubtitle =>
+      isEnglish ? 'Top 10 by XP' : '١٠ بڑے XP کھلاڑی';
+
+  String get leaderboardHomeTile =>
+      isEnglish ? 'Leaderboard' : 'لیڈر بورڈ';
+
+  String get helpInstructionsCardTitle =>
+      isEnglish ? 'Game guide' : AppStrings.helpInstructionsCardTitleUr;
+
+  String get helpInstructionsCardSubtitle =>
+      isEnglish
+          ? 'How it works • XP • streak • coins'
+          : AppStrings.helpInstructionsCardSubtitleUr;
+
+  String get meetActorsAppBarTitle =>
+      isEnglish ? 'Meet our actors' : AppStrings.meetActorsCardTitleUr;
+
+  String get meetActorsIntroEn =>
+      'These characters show up again and again in our scenes. Each one has a clear personality so idioms and situations stick in memory.';
+
+  String get meetActorsCardTitle =>
+      isEnglish ? 'Meet our actors' : AppStrings.meetActorsCardTitleUr;
+
+  String get meetActorsCardSubtitle =>
+      isEnglish
+          ? 'Recurring faces in your rounds'
+          : AppStrings.meetActorsCardSubtitleUr;
+
+  String get meetActorsPortraitSoon =>
+      isEnglish ? 'Photo coming soon' : AppStrings.meetActorsPortraitSoonUr;
+
+  String get helpSheetTitle =>
+      isEnglish ? 'GuessKaro guide' : AppStrings.helpSheetTitleUr;
+
+  String get helpMissionTitle =>
+      isEnglish ? 'Why we built GuessKaro' : AppStrings.helpMissionTitle;
+
+  String get helpMissionBodyEn =>
+      'GuessKaro is here to teach everyday Urdu idiom—and to make that learning feel joyful, fast, and a little addictive. '
+      'Our intent is gentle education: revive curiosity for Urdu, keep its wit alive, and help phrases stick through play—not drills.';
+
+  String get helpHowToSectionTitle =>
+      isEnglish ? 'How a round flows' : AppStrings.helpHowToPlayTitle;
+
+  String get helpHowToBodyEn =>
+      'Each card shows a scene photo. Pick the phrase that fits (tap an option—or speak your answer if you chose speak mode). '
+      'See whether you\'re correct, flip to reveal the phrase, answer a four-option meaning quiz, read an example sentence, then advance.';
+
+  String get helpScoresSectionTitle =>
+      isEnglish ? 'Points & timers' : AppStrings.helpScoresTitle;
+
+  String get helpScoresBodyEn =>
+      'In timed modes, faster correct guesses score higher. Consecutive correct answers in the same session multiply your earned points—that is separate from your daily streak on Home.';
+
+  String get helpLevelsSectionTitle =>
+      isEnglish ? 'Levels & XP' : AppStrings.helpLevelsTitle;
+
+  String get helpLevelsBodyEn =>
+      'You gain XP when you nail answers and complete cards; the XP bar climbs toward your next title. Speed Round unlocks at level 5.';
+
+  String get helpStreakSectionTitle =>
+      isEnglish ? 'Daily streak (Home)' : AppStrings.helpStreakTitle;
+
+  String get helpStreakBodyEn =>
+      'The flame on Home counts calendar days you play at least once. Playing more on the same day doesn\'t add extra streak days; skip a calendar day and the count resets from one.';
+
+  String get helpCoinsSectionTitle =>
+      isEnglish ? 'Coins & hints' : AppStrings.helpCoinsSectionTitle;
+
+  String helpCoinsParagraph() {
+    final int e = ScoringConstants.eliminateHintCost;
+    final int f = ScoringConstants.freezeHintCost;
+    if (isEnglish) {
+      return 'You earn coins from strong rounds. Spend them on the photo round: Eliminate removes wrong options ($e coins) '
+          'and Freeze pauses the timer ($f coins). Clearing your daily progress also feeds bonus XP—you will see it after sessions.';
+    }
+    return AppStrings.helpCoinsBodyUr(
+      toUrduNumerals(e),
+      toUrduNumerals(f),
+    );
+  }
+
+  String get helpGotIt =>
+      isEnglish ? 'Got it' : AppStrings.helpGotItUr;
 
   String get navHome => isEnglish ? 'Home' : 'گھر';
   String get navLibrary => isEnglish ? 'Library' : 'لائبریری';
   String get libraryTitle => isEnglish ? 'Idioms Library' : 'کتب خانہ';
   String get navProfile => isEnglish ? 'Profile' : 'پروفائل';
+
+  /// Bottom bar (Roman script common for system-style labels in UR UI).
+  String get navSettings => isEnglish ? 'Settings' : 'سیٹنگز';
+
+  /// Recent sessions row — maps stored mode keys to localized labels.
+  String sessionModeDisplay(String rawMode) {
+    final String m = ScoringConstants.sanitizeGameMode(rawMode);
+    if (m == ScoringConstants.modeSpeedRound) {
+      return speedRound;
+    }
+    if (m == ScoringConstants.modeQuickPlay) {
+      return quickPlay;
+    }
+    return rawMode;
+  }
 
   String get librarySearchHint =>
       isEnglish ? 'Search idiom…' : 'محاورہ تلاش کریں…';
@@ -289,6 +392,9 @@ class UiStrings {
   String get statStreak => isEnglish ? 'Streak' : 'سٹریک';
   String get statBest => isEnglish ? 'Best' : 'بہترین';
   String get statCoins => isEnglish ? 'Coins' : 'سکے';
+
+  String get statCorrectRate =>
+      isEnglish ? 'Correct' : 'درست';
 
   /// Level ribbon for XP bar (numeric level uses Latin in EN UI).
   String levelBarLabel({required int level, required String localizedTitle}) {

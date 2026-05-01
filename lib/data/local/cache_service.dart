@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../core/constants/app_config.dart';
 import '../models/phrase_model.dart';
 
 class CacheService {
@@ -51,11 +52,19 @@ class CacheService {
   }
 
   bool shouldRefetch() {
+    if (kPhraseCacheTtlHours <= 0) return true;
+
     final String? lastSync = _metaBox.get(_lastPhraseSyncKey) as String?;
     if (lastSync == null) return true;
 
     final DateTime parsed = DateTime.parse(lastSync);
-    return DateTime.now().difference(parsed).inHours > 24;
+    final Duration ttl = Duration(hours: kPhraseCacheTtlHours);
+    return DateTime.now().difference(parsed) >= ttl;
+  }
+
+  /// Next [fetchAllPhrases] skips fast path and pulls from Supabase (keeps Hive copy for fallback on error).
+  Future<void> markPhrasesStaleForRefetch() async {
+    await _metaBox.delete(_lastPhraseSyncKey);
   }
 
   Future<void> saveOnboardingSeen() async {
@@ -74,6 +83,7 @@ class CacheService {
   /// Drops cached phrases only — keeps onboarding / guest prefs in [SharedPreferences].
   Future<void> clearPhraseCacheOnly() async {
     await _phrasesBox.clear();
+    await _metaBox.delete(_lastPhraseSyncKey);
   }
 }
 

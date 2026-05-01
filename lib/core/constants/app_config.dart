@@ -14,3 +14,13 @@ const String kLocalGuestUserId = 'local_guest';
 /// Omit or `false` for normal 24h cache behaviour.
 const bool kClearPhraseCacheOnLaunch =
     bool.fromEnvironment('CLEAR_PHRASE_CACHE', defaultValue: false);
+
+/// Minimum interval before local phrase cache is considered stale and Supabase refetch runs.
+///
+/// • `24` default — refetch roughly once per day.
+/// • `0` — always prefer network when online (heavy; dev only).
+/// • `flutter run --dart-define=PHRASE_CACHE_TTL_HOURS=1`
+const int kPhraseCacheTtlHours = int.fromEnvironment(
+  'PHRASE_CACHE_TTL_HOURS',
+  defaultValue: 24,
+);

@@ -27,11 +27,37 @@ class _PhraseLibraryScreenState extends ConsumerState<PhraseLibraryScreen> {
   final TextEditingController _search = TextEditingController();
   String _category = 'سب';
   String _difficulty = 'سب';
+  late Future<List<PhraseModel>> _libraryFuture;
+  bool _futureReady = false;
 
   @override
   void dispose() {
     _search.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_futureReady) return;
+    _futureReady = true;
+    _libraryFuture = ref
+        .read(phraseRepositoryProvider)
+        .fetchAllPhrases();
+  }
+
+  Future<List<PhraseModel>> _reloadPhrases({required bool forceRemote}) {
+    final Future<List<PhraseModel>> next = ref
+        .read(phraseRepositoryProvider)
+        .fetchAllPhrases(forceRemote: forceRemote);
+    setState(() {
+      _libraryFuture = next;
+    });
+    return next;
+  }
+
+  Future<void> _onPullToRefresh() async {
+    await _reloadPhrases(forceRemote: true);
   }
 
   @override
@@ -42,14 +68,19 @@ class _PhraseLibraryScreenState extends ConsumerState<PhraseLibraryScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: FutureBuilder<List<PhraseModel>>(
-        future: ref.read(phraseRepositoryProvider).fetchAllPhrases(),
+        future: _libraryFuture,
         builder: (context, snap) {
           if (snap.hasError) {
             final String err =
                 s.isEnglish
                     ? 'Unable to load library.'
                     : 'فہرست لوڈ نہیں ہو سکی';
-            return ErrorState(message: err, onRetry: () => setState(() {}));
+            return ErrorState(
+              message: err,
+              onRetry: () {
+                _reloadPhrases(forceRemote: true);
+              },
+            );
           }
           if (!snap.hasData) {
             return const Padding(
@@ -166,64 +197,85 @@ class _PhraseLibraryScreenState extends ConsumerState<PhraseLibraryScreen> {
                 child: Text(s.libraryPhraseCountInline(filtered.length)),
               ),
               Expanded(
-                child:
-                    filtered.isEmpty
-                        ? EmptyState(message: s.libraryNoResults, emoji: '🔎')
-                        : GridView.builder(
-                          padding: EdgeInsets.fromLTRB(
-                            12,
-                            12,
-                            12,
-                            bottomInsetGap(context),
-                          ),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                                childAspectRatio: 0.75,
-                              ),
-                          itemCount: filtered.length,
-                          itemBuilder: (context, i) {
-                            final p = filtered[i];
-                            return InkWell(
-                              onTap: () => _openDetails(context, p),
-                              child: Card(
-                                color: AppColors.bgCard,
-                                clipBehavior: Clip.antiAlias,
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Expanded(
-                                      child: ColoredBox(
-                                        color: Colors.grey.shade200,
-                                        child: SupabasePhraseImage(
-                                          imageUrl: p.imageUrl,
-                                          fit: BoxFit.cover,
-                                          alignment: Alignment.center,
-                                        ),
-                                      ),
+                child: RefreshIndicator(
+                  onRefresh: _onPullToRefresh,
+                  child:
+                      filtered.isEmpty
+                          ? LayoutBuilder(
+                            builder: (context, constraints) {
+                              return SingleChildScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: constraints.maxHeight,
+                                  ),
+                                  child: Center(
+                                    child: EmptyState(
+                                      message: s.libraryNoResults,
+                                      emoji: '🔎',
                                     ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: Directionality(
-                                        textDirection: TextDirection.rtl,
-                                        child: UrduText(
-                                          p.urduPhrase,
-                                          style: AppTextStyles.urduBody
-                                              .copyWith(fontSize: 16),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
+                              );
+                            },
+                          )
+                          : GridView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: EdgeInsets.fromLTRB(
+                              12,
+                              12,
+                              12,
+                              bottomInsetGap(context),
+                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                  childAspectRatio: 0.75,
+                                ),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, i) {
+                              final p = filtered[i];
+                              return InkWell(
+                                onTap: () => _openDetails(context, p),
+                                child: Card(
+                                  color: AppColors.bgCard,
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(
+                                        child: ColoredBox(
+                                          color: Colors.grey.shade200,
+                                          child: SupabasePhraseImage(
+                                            imageUrl: p.imageUrl,
+                                            fit: BoxFit.cover,
+                                            alignment: Alignment.center,
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8),
+                                        child: Directionality(
+                                          textDirection: TextDirection.rtl,
+                                          child: UrduText(
+                                            p.urduPhrase,
+                                            style: AppTextStyles.urduBody
+                                                .copyWith(fontSize: 16),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                ),
               ),
             ],
           );

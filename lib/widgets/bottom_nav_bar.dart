@@ -8,10 +8,16 @@ class BottomNavBar extends StatelessWidget {
     super.key,
     required this.selectedIndex,
     required this.onTap,
+    this.labelHome = 'Home',
+    this.labelProfile = 'Profile',
+    this.labelSettings = 'Settings',
   });
 
   final int selectedIndex;
   final ValueChanged<int> onTap;
+  final String labelHome;
+  final String labelProfile;
+  final String labelSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -29,19 +35,19 @@ class BottomNavBar extends StatelessWidget {
           children: <Widget>[
             _NavItem(
               icon: Icons.home_rounded,
-              label: 'Home',
+              label: labelHome,
               active: selectedIndex == 0,
               onTap: () => onTap(0),
             ),
             _NavItem(
-              icon: Icons.menu_book_rounded,
-              label: 'Library',
+              icon: Icons.person_rounded,
+              label: labelProfile,
               active: selectedIndex == 1,
               onTap: () => onTap(1),
             ),
             _NavItem(
-              icon: Icons.person_rounded,
-              label: 'Profile',
+              icon: Icons.settings_rounded,
+              label: labelSettings,
               active: selectedIndex == 2,
               onTap: () => onTap(2),
             ),

@@ -3,37 +3,34 @@ class ScoringConstants {
 
   static const int quickPlayDurationSeconds = 20;
   static const int speedRoundDurationSeconds = 10;
-  static const int learnModeDurationSeconds = 0;
 
   /// Meaning-quiz stage timers (photo stage uses values above).
   static const int meaningQuickPlaySeconds = 10;
   static const int meaningSpeedSeconds = 8;
-  static const int meaningLearnSeconds = 0;
 
   static const String modeQuickPlay = 'quick_play';
   static const String modeSpeedRound = 'speed_round';
-  static const String modeLearn = 'learn';
+
+  /// Legacy sessions may still persist `learn` — treated as quick play.
+  static String sanitizeGameMode(String mode) =>
+      mode == 'learn' ? modeQuickPlay : mode;
 
   /// Photo round duration for the given session mode.
   static int photoDurationSecondsForMode(String mode) {
-    switch (mode) {
+    switch (sanitizeGameMode(mode)) {
       case modeSpeedRound:
         return speedRoundDurationSeconds;
-      case modeLearn:
-        return learnModeDurationSeconds;
       case modeQuickPlay:
       default:
         return quickPlayDurationSeconds;
     }
   }
 
-  /// Meaning round duration; `0` means no timed quiz (learn mode).
+  /// Meaning-round timer length for the active mode.
   static int meaningDurationSecondsForMode(String mode) {
-    switch (mode) {
+    switch (sanitizeGameMode(mode)) {
       case modeSpeedRound:
         return meaningSpeedSeconds;
-      case modeLearn:
-        return meaningLearnSeconds;
       case modeQuickPlay:
       default:
         return meaningQuickPlaySeconds;

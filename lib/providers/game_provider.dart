@@ -357,13 +357,14 @@ class GameNotifier extends Notifier<GameState> {
     String? difficulty,
     int count = 10,
   }) async {
+    final String normalizedMode = ScoringConstants.sanitizeGameMode(mode);
     _cancelAllTimers();
     _persistedSession = false;
     unawaited(_sounds.startTensionLoop());
     final bool timedModeEnabled = await _loadTimedModeEnabled();
     state = state.copyWith(
       phase: GamePhase.loadingPhrases,
-      mode: mode,
+      mode: normalizedMode,
       category: category,
       difficulty: difficulty,
       timedModeEnabled: timedModeEnabled,
@@ -375,7 +376,7 @@ class GameNotifier extends Notifier<GameState> {
 
     try {
       final List<PhraseModel> session = await _phrases.getSessionPhrases(
-        mode: mode,
+        mode: normalizedMode,
         category: category,
         difficulty: difficulty,
         count: count,

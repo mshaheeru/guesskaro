@@ -19,6 +19,8 @@ import '../../providers/local_guest_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../widgets/common/urdu_text.dart';
 import '../../widgets/custom_toggle_switch.dart';
+import '../../core/navigation/main_bottom_tab_nav.dart';
+import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/jp_button_ghost.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -224,6 +226,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BottomNavBar(
+        selectedIndex: 2,
+        labelHome: s.navHome,
+        labelProfile: s.navProfile,
+        labelSettings: s.navSettings,
+        onTap: (int i) => navigateMainBottomTab(context, i),
       ),
     );
   }

@@ -7,6 +7,7 @@ import '../../data/local/local_player_prefs.dart';
 import '../../data/models/profile_model.dart';
 import '../../data/repositories/profile_repository.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/leaderboard_provider.dart';
 import '../../providers/local_guest_provider.dart';
 import '../../providers/profile_provider.dart';
 
@@ -103,6 +104,7 @@ Future<void> goHomeAfterAccountAuth(
     preferredDisplayName: preferredDisplayName,
     avatarIndex: avatarIndex,
   );
-  ref.invalidate(profileNotifierProvider);
+  await ref.read(profileNotifierProvider.notifier).refreshProfile();
+  ref.invalidate(leaderboardScreenDataProvider);
   router.go('/home');
 }

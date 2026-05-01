@@ -176,29 +176,160 @@ class ProfileRepository {
     return ProfileModel.fromJson(Map<String, dynamic>.from(rows.first as Map));
   }
 
-  Future<List<LeaderboardEntryModel>> fetchTopLeaderboard({
-    int limit = 20,
-  }) async {
-    if (!kAuthEnabled) {
-      return <LeaderboardEntryModel>[];
+  static int _activityScore(DateTime? lastPlayed) =>
+      lastPlayed?.millisecondsSinceEpoch ?? 0;
+
+  /// Computes 1-based rank: higher XP first; same XP → more recently active wins.
+  Future<int> leaderboardRankFor(ProfileModel profile) async {
+    if (!kAuthEnabled) return 1;
+
+    final PostgrestResponse<List<dynamic>> strictlyHigherXp = await _client
+        .from('profiles')
+        .select('id')
+        .gt('xp', profile.xp)
+        .count(CountOption.exact);
+    final int higherXpBand = strictlyHigherXp.count;
+
+    final List<dynamic> sameXpRows = await _client
+        .from('profiles')
+        .select('id, last_played_date')
+        .eq('xp', profile.xp);
+
+    final int myAct = _activityScore(profile.lastPlayedDate);
+    int tieAhead = 0;
+    for (final dynamic row in sameXpRows) {
+      final Map<String, dynamic> map = Map<String, dynamic>.from(row as Map);
+      if ((map['id'] as String) == profile.id) continue;
+      final DateTime? otherLast =
+          map['last_played_date'] == null
+              ? null
+              : DateTime.tryParse(map['last_played_date'] as String);
+      if (_activityScore(otherLast) > myAct) tieAhead++;
     }
+
+    return higherXpBand + tieAhead + 1;
+  }
+
+  LeaderboardScreenData _leaderboardFromRpc(Map<String, dynamic> raw) {
+    final List<dynamic> topRaw =
+        raw['top'] as List<dynamic>? ?? const <dynamic>[];
+
+    final List<LeaderboardEntryModel> top = <LeaderboardEntryModel>[];
+    int index = 0;
+    for (final dynamic row in topRaw) {
+      index++;
+      top.add(
+        LeaderboardEntryModel.fromProfileRow(
+          Map<String, dynamic>.from(row as Map<dynamic, dynamic>),
+          rank: index,
+        ),
+      );
+    }
+
+    LeaderboardEntryModel? youRow;
+    final dynamic youRaw = raw['you'];
+    if (youRaw is Map<dynamic, dynamic>) {
+      final Map<String, dynamic> ym =
+          Map<String, dynamic>.from(youRaw);
+      youRow = LeaderboardEntryModel(
+        userId: ym['id'] as String,
+        displayName:
+            ((ym['display_name'] as String?) ?? '').trim().isNotEmpty
+                ? ym['display_name'] as String
+                : 'Player',
+        xp: (ym['xp'] as num?)?.toInt() ?? 0,
+        streak: (ym['longest_streak'] as num?)?.toInt() ?? 0,
+        coins: (ym['coins'] as num?)?.toInt() ?? 0,
+        rank: (ym['rank'] as num?)?.toInt() ?? 1,
+      );
+    }
+
+    return LeaderboardScreenData(top: top, you: youRow);
+  }
+
+  /// Fallback when RPC missing / not migrated — sees only rows allowed by RLS.
+  Future<LeaderboardScreenData> fetchLeaderboardScreenDataFromProfilesTable({
+    String? signedInUserId,
+  }) async {
+    final List<LeaderboardEntryModel> top =
+        await fetchTopLeaderboard(limit: 10);
+
+    LeaderboardEntryModel? youRow;
+    if (signedInUserId != null) {
+      final ProfileModel? p = await fetchProfile(signedInUserId);
+      if (p != null) {
+        final int rank = await leaderboardRankFor(p);
+        youRow = LeaderboardEntryModel(
+          userId: p.id,
+          displayName:
+              p.displayName.trim().isNotEmpty ? p.displayName.trim() : 'Player',
+          xp: p.xp,
+          streak: p.longestStreak,
+          coins: p.coins,
+          rank: rank,
+        );
+      }
+    }
+
+    return LeaderboardScreenData(top: top, you: youRow);
+  }
+
+  /// Top `[limit]` globally by XP, then recent `last_played_date` among ties.
+  Future<List<LeaderboardEntryModel>> fetchTopLeaderboard({int limit = 10}) async {
+    if (!kAuthEnabled) return <LeaderboardEntryModel>[];
     final List<dynamic> rows = await _client
         .from('profiles')
-        .select('id, display_name, longest_streak, coins')
-        .eq('show_on_leaderboard', true)
-        .order('longest_streak', ascending: false)
-        .order('coins', ascending: false)
+        .select(
+          'id, display_name, xp, longest_streak, coins, last_played_date',
+        )
+        .order('xp', ascending: false)
+        .order(
+          'last_played_date',
+          ascending: false,
+          nullsFirst: false,
+        )
         .limit(limit);
-    return rows
-        .asMap()
-        .entries
-        .map((entry) {
-          return LeaderboardEntryModel.fromProfileRow(
-            Map<String, dynamic>.from(entry.value as Map),
-            rank: entry.key + 1,
-          );
-        })
-        .toList(growable: false);
+
+    int index = 0;
+    final List<LeaderboardEntryModel> out = <LeaderboardEntryModel>[];
+    for (final dynamic raw in rows) {
+      index++;
+      out.add(
+        LeaderboardEntryModel.fromProfileRow(
+          Map<String, dynamic>.from(raw as Map),
+          rank: index,
+        ),
+      );
+    }
+    return out;
+  }
+
+  /// Prefer [leaderboard_bundle] RPC — bypasses restrictive `profiles` RLS.
+  Future<LeaderboardScreenData> fetchLeaderboardScreenData({
+    String? signedInUserId,
+  }) async {
+    if (!kAuthEnabled) {
+      return const LeaderboardScreenData(top: <LeaderboardEntryModel>[], you: null);
+    }
+
+    try {
+      final dynamic raw = await _client.rpc(
+        'leaderboard_bundle',
+        params: <String, dynamic>{'p_user_id': signedInUserId},
+      );
+      if (raw is Map<String, dynamic>) {
+        return _leaderboardFromRpc(raw);
+      }
+      if (raw is Map) {
+        return _leaderboardFromRpc(Map<String, dynamic>.from(raw));
+      }
+    } on PostgrestException {
+      // RPC missing or privileges — fall back (often only shows self under RLS).
+    } catch (_) {}
+
+    return fetchLeaderboardScreenDataFromProfilesTable(
+      signedInUserId: signedInUserId,
+    );
   }
 
   int _calculateLevel(int xp) {

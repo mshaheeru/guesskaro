@@ -37,7 +37,11 @@ class AuthNotifier extends AsyncNotifier<User?> {
     });
   }
 
-  /// Signs up then ensures [state] mirrors an active session (no silent anon fallback).
+  /// Email/password sign-up.
+  ///
+  /// [SignUpFlowResult.emailConfirmationRequired] only when Supabase project has
+  /// **Authentication → Providers → Email → Confirm email** enabled. Disable
+  /// that toggle for immediate session here (clients cannot bypass it).
   Future<SignUpFlowResult> completeEmailSignUp({
     required String email,
     required String password,

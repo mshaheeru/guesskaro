@@ -1,6 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 
-/// Shared phrase image widget with shimmer placeholder + graceful error UI.
+import '../../core/constants/app_colors.dart';
+import '../../core/services/phrase_image_disk_cache.dart';
+
+/// Shared phrase image: disk-backed network cache, shimmer placeholder, graceful error.
 class SupabasePhraseImage extends StatelessWidget {
   const SupabasePhraseImage({
     super.key,
@@ -19,19 +24,21 @@ class SupabasePhraseImage extends StatelessWidget {
       return _errorBox();
     }
 
-    return Image.network(
-      imageUrl,
+    return CachedNetworkImage(
+      imageUrl: imageUrl.trim(),
       fit: fit,
       alignment: alignment,
-      loadingBuilder: (
-        BuildContext context,
-        Widget child,
-        ImageChunkEvent? loadingProgress,
-      ) {
-        if (loadingProgress == null) return child;
-        return const _ThreeDotsLoader();
-      },
-      errorBuilder: (BuildContext _, Object __, StackTrace? ___) => _errorBox(),
+      cacheManager: PhraseImageDiskCache.manager,
+      placeholder: (BuildContext _, String __) =>
+          ColoredBox(
+            color: AppColors.bgCard,
+            child: Shimmer.fromColors(
+              baseColor: AppColors.bgCard,
+              highlightColor: AppColors.bgElevated,
+              child: Container(color: AppColors.bgCard),
+            ),
+          ),
+      errorWidget: (BuildContext _, String __, Object ___) => _errorBox(),
     );
   }
 
@@ -40,28 +47,6 @@ class SupabasePhraseImage extends StatelessWidget {
       decoration: BoxDecoration(color: Colors.grey.shade300),
       child: const Center(
         child: Text('🖼', style: TextStyle(fontSize: 28)),
-      ),
-    );
-  }
-}
-
-class _ThreeDotsLoader extends StatelessWidget {
-  const _ThreeDotsLoader();
-
-  @override
-  Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: Color(0xFFF0F0F0),
-      child: Center(
-        child: Text(
-          '...',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 4,
-            color: Color(0xFF9E9E9E),
-          ),
-        ),
       ),
     );
   }

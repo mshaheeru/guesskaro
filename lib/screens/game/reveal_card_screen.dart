@@ -163,13 +163,22 @@ class RevealCardScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    if (game.phase == GamePhase.showingReveal ||
+                    if (game.phase == GamePhase.showingPhoto)
+                      AspectRatio(
+                        aspectRatio: 4 / 3,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: ColoredBox(color: AppColors.bgPrimary),
+                        ),
+                      )
+                    else if (game.phase == GamePhase.showingReveal ||
                         game.phase == GamePhase.showingMeaningQuiz)
                       CardFlipAnimation(
                         key: ValueKey<String>('flip-${phrase.id}'),
                         frontWidget: PhotoCard(
                           imageUrl: phrase.imageUrl,
-                          aspectRatio: 4 / 3,
+                          placeholderAspectRatio: 4 / 3,
+                          maxImageHeight: MediaQuery.sizeOf(context).height * 0.5,
                           fit: BoxFit.contain,
                         ),
                         backWidget: RevealImageCard(

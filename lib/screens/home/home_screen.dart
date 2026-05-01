@@ -11,10 +11,12 @@ import '../../data/repositories/session_repository.dart';
 import '../../providers/game_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../providers/session_user_provider.dart';
+import '../../core/navigation/main_bottom_tab_nav.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/coin_badge.dart';
 import '../../widgets/jp_card.dart';
 import '../../widgets/streak_badge.dart';
+import '../../widgets/home/game_instructions_sheet.dart';
 import '../../widgets/xp_bar.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -33,14 +35,16 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      body: Padding(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          16,
-          16,
-          bottomInsetGap(context, gap: 16),
-        ),
-        child: ListView(
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            64,
+            16,
+            bottomInsetGap(context, gap: 16),
+          ),
+          child: ListView(
           physics: const BouncingScrollPhysics(),
           clipBehavior: Clip.hardEdge,
           children: [
@@ -59,7 +63,7 @@ class HomeScreen extends ConsumerWidget {
                 CoinBadge(amount: profile?.coins ?? 0),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             JpCard(
               child: Column(
                 children: <Widget>[
@@ -79,12 +83,12 @@ class HomeScreen extends ConsumerWidget {
                       StreakBadge(count: profile?.dayStreak ?? 0),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   XpBar(
                     level: level,
                     xpPct: profile?.xpBarFractionWithinCurrentLevel ?? 0,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     s.levelBarLabel(level: level, localizedTitle: tierLabel),
                     style: AppTextStyles.enCaption,
@@ -92,11 +96,11 @@ class HomeScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             JpCard(
               glowColor: AppColors.gold,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: FutureBuilder<int>(
                   future:
                       userId == null
@@ -137,7 +141,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 6),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(3),
                           child: LinearProgressIndicator(
@@ -157,15 +161,10 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 14),
-            GridView.count(
-              crossAxisCount: 2,
-              childAspectRatio: 1.2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
+            const SizedBox(height: 6),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
                 _ModeCard(
                   emoji: '⚡',
                   label: s.quickPlay,
@@ -174,12 +173,7 @@ class HomeScreen extends ConsumerWidget {
                       () =>
                           _start(context, ref, ScoringConstants.modeQuickPlay),
                 ),
-                _ModeCard(
-                  emoji: '📚',
-                  label: s.learnMode,
-                  enSubLabel: s.learnMode,
-                  onTap: () => _start(context, ref, ScoringConstants.modeLearn),
-                ),
+                const SizedBox(height: 8),
                 _ModeCard(
                   emoji: '🔥',
                   label: s.speedRound,
@@ -190,25 +184,42 @@ class HomeScreen extends ConsumerWidget {
                       () =>
                           _start(context, ref, ScoringConstants.modeSpeedRound),
                 ),
+                const SizedBox(height: 8),
                 _ModeCard(
                   emoji: '📁',
-                  label: 'Leaderboard',
-                  enSubLabel: 'Top streak + coins',
+                  label: s.leaderboardHomeTile,
+                  enSubLabel: s.leaderboardTileSubtitle,
                   onTap: () => context.go('/leaderboard'),
+                ),
+                const SizedBox(height: 8),
+                _ModeCard(
+                  emoji: '📖',
+                  label: s.helpInstructionsCardTitle,
+                  enSubLabel: s.helpInstructionsCardSubtitle,
+                  onTap: () =>
+                      showGameInstructionsSheet(context, strings: s),
+                ),
+                const SizedBox(height: 8),
+                _ModeCard(
+                  emoji: '👋',
+                  leadingAssetPath: 'assets/images/hi.png',
+                  accentColor: AppColors.purple,
+                  label: s.meetActorsCardTitle,
+                  enSubLabel: s.meetActorsCardSubtitle,
+                  onTap: () => context.go('/meet-actors'),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
           ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavBar(
         selectedIndex: 0,
-        onTap: (i) {
-          if (i == 1) context.go('/library');
-          if (i == 2) context.go('/profile');
-          if (i == 0) {}
-        },
+        labelHome: s.navHome,
+        labelProfile: s.navProfile,
+        labelSettings: s.navSettings,
+        onTap: (int i) => navigateMainBottomTab(context, i),
       ),
     );
   }
@@ -300,11 +311,15 @@ class _ModeCard extends StatelessWidget {
     required this.label,
     required this.enSubLabel,
     required this.onTap,
+    this.leadingAssetPath,
+    this.accentColor,
     this.locked = false,
     this.lockText,
   });
 
   final String emoji;
+  final String? leadingAssetPath;
+  final Color? accentColor;
   final String label;
   final String enSubLabel;
   final VoidCallback onTap;
@@ -313,12 +328,48 @@ class _ModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accentColor = switch (emoji) {
-      '⚡' => AppColors.orange,
-      '📚' => AppColors.purple,
-      '🔥' => AppColors.wrong,
-      _ => AppColors.gold,
-    };
+    final Color resolvedAccent =
+        accentColor ??
+        switch (emoji) {
+          '⚡' => AppColors.orange,
+          '🔥' => AppColors.wrong,
+          _ => AppColors.gold,
+        };
+
+    final Widget leading =
+        leadingAssetPath != null
+            ? SizedBox(
+              width: 36,
+              height: 36,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  leadingAssetPath!,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (_, Object __, StackTrace? ___) => ColoredBox(
+                        color: resolvedAccent.withValues(alpha: 0.15),
+                        child: Center(
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                ),
+              ),
+            )
+            : Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: resolvedAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Text(emoji, style: const TextStyle(fontSize: 19)),
+              ),
+            );
 
     return Material(
       color: AppColors.bgCard,
@@ -327,35 +378,41 @@ class _ModeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: locked ? null : onTap,
         child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(emoji, style: const TextStyle(fontSize: 22)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              leading,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      label,
+                      style: AppTextStyles.urduHeadline.copyWith(fontSize: 15),
+                    ),
+                    const SizedBox(height: 4),
+                    if (!locked)
+                      Text(
+                        enSubLabel,
+                        style: AppTextStyles.enCaption,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    if (locked)
+                      Text(
+                        lockText ?? 'Locked',
+                        style: AppTextStyles.enCaption.copyWith(
+                          color: AppColors.wrong,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: AppTextStyles.urduHeadline.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 2),
-              if (!locked) Text(enSubLabel, style: AppTextStyles.enCaption),
-              if (locked)
-                Text(
-                  lockText ?? 'Locked',
-                  style: AppTextStyles.enCaption.copyWith(
-                    color: AppColors.wrong,
-                  ),
-                ),
             ],
           ),
         ),

@@ -8,6 +8,7 @@ import '../../core/constants/app_config.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/layout/bottom_inset.dart';
 import '../../core/locale/ui_strings.dart';
+import '../../core/navigation/main_bottom_tab_nav.dart';
 import '../../data/models/leaderboard_entry_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/leaderboard_provider.dart';
@@ -29,11 +30,8 @@ class LeaderboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final UiStrings s = UiStrings.watch(ref);
-    final AsyncValue<List<LeaderboardEntryModel>> leaderboard = ref.watch(
-      leaderboardProvider,
-    );
-    final LeaderboardEntryModel? me = ref.watch(
-      currentUserLeaderboardEntryProvider,
+    final AsyncValue<LeaderboardScreenData> leaderboard = ref.watch(
+      leaderboardScreenDataProvider,
     );
     final user = ref.watch(currentUserProvider);
     final bool guestGlobalBoard =
@@ -66,22 +64,27 @@ class LeaderboardScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             if (guestGlobalBoard) _GuestLeaderboardBanner(s: s),
             if (guestGlobalBoard) const SizedBox(height: 12),
-            if (me != null) _MyRankCard(entry: me),
-            if (me != null) const SizedBox(height: 12),
             leaderboard.when(
-              data: (List<LeaderboardEntryModel> rows) {
-                if (rows.isEmpty) {
-                  return const _EmptyLeaderboard();
-                }
+              data: (LeaderboardScreenData data) {
                 return Column(
-                  children: rows
-                      .map((LeaderboardEntryModel row) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _LeaderboardRow(entry: row),
-                        );
-                      })
-                      .toList(growable: false),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    if (data.you != null) _MyRankCard(entry: data.you!),
+                    if (data.you != null) const SizedBox(height: 12),
+                    if (data.top.isEmpty)
+                      const _EmptyLeaderboard()
+                    else
+                      Column(
+                        children: data.top
+                            .map((LeaderboardEntryModel row) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _LeaderboardRow(entry: row),
+                              );
+                            })
+                            .toList(growable: false),
+                      ),
+                  ],
                 );
               },
               loading:
@@ -94,11 +97,10 @@ class LeaderboardScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: BottomNavBar(
         selectedIndex: 0,
-        onTap: (int i) {
-          if (i == 1) context.go('/library');
-          if (i == 2) context.go('/profile');
-          if (i == 0) context.go('/home');
-        },
+        labelHome: s.navHome,
+        labelProfile: s.navProfile,
+        labelSettings: s.navSettings,
+        onTap: (int i) => navigateMainBottomTab(context, i),
       ),
     );
   }
@@ -175,7 +177,7 @@ class _MyRankCard extends StatelessWidget {
             ),
           ),
           Text(
-            '🔥 ${entry.streak}  •  🪙 ${entry.coins}',
+            '⭐ ${entry.xp}  •  🔥 ${entry.streak}  •  🪙 ${entry.coins}',
             style: AppTextStyles.enCaption.copyWith(
               color: AppColors.gold,
               fontSize: 12,
@@ -221,16 +223,25 @@ class _LeaderboardRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Text(
-            '🔥 ${entry.streak}',
+            '⭐ ${entry.xp}',
             style: AppTextStyles.enCaption.copyWith(
               fontSize: 12,
               color: AppColors.orange,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
+          Text(
+            '🔥 ${entry.streak}',
+            style: AppTextStyles.enCaption.copyWith(
+              fontSize: 12,
+              color: AppColors.orange.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 8),
           Text(
             '🪙 ${entry.coins}',
             style: AppTextStyles.enCaption.copyWith(

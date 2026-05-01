@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -32,7 +34,11 @@ class PhraseRepository {
     return phrase.copyWith(imageUrl: image, revealImageUrl: reveal);
   }
 
-  Future<List<PhraseModel>> fetchAllPhrases() async {
+  Future<List<PhraseModel>> fetchAllPhrases({bool forceRemote = false}) async {
+    if (forceRemote) {
+      await _cacheService.markPhrasesStaleForRefetch();
+    }
+
     final List<PhraseModel> cached = _cacheService.getCachedPhrases();
     final List<PhraseModel> normalizedCached =
         cached.map(_normalizePhraseModel).toList();
@@ -140,6 +146,38 @@ class PhraseRepository {
     } catch (_) {
       if (normalizedCached.isNotEmpty) return normalizedCached;
       throw Exception('Unable to load phrases right now.');
+    }
+  }
+
+  /// Minimal rows for warming disk cache after login (before a session exists).
+  Future<List<String>> fetchSampleWarmImageUrls({
+    int pool = 24,
+    int pick = 5,
+  }) async {
+    try {
+      final int cap = pool.clamp(8, 100);
+      final List<dynamic> rows = await _client
+          .from('phrases')
+          .select('image_url')
+          .eq('is_active', true)
+          .limit(cap);
+
+      final List<String> urls =
+          rows
+              .map(
+                (dynamic r) =>
+                    ((r as Map)['image_url'] as String?)?.trim() ?? '',
+              )
+              .where((String u) => u.isNotEmpty)
+              .toList();
+
+      urls.shuffle(Random());
+      if (urls.length <= pick) {
+        return urls;
+      }
+      return urls.take(pick).toList();
+    } catch (_) {
+      return <String>[];
     }
   }
 

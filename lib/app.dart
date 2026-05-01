@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/locale_provider.dart';
+import 'widgets/common/phrase_photo_prefetch_host.dart';
 
 class JhatPatApp extends ConsumerWidget {
   const JhatPatApp({super.key});
@@ -29,6 +30,16 @@ class JhatPatApp extends ConsumerWidget {
         ],
         theme: AppTheme.lightTheme,
         routerConfig: AppRouter.router,
+        builder: (BuildContext context, Widget? child) {
+          return Stack(
+            alignment: Alignment.center,
+            fit: StackFit.expand,
+            children: <Widget>[
+              if (child != null) child,
+              const PhrasePhotoPrefetchHost(),
+            ],
+          );
+        },
       ),
     );
   }

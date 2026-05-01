@@ -9,7 +9,7 @@ import '../../core/locale/ui_strings.dart';
 import '../../providers/locale_provider.dart';
 import '../../widgets/common/urdu_text.dart';
 
-/// Shared branding + language picker for Sign in / Sign up flows.
+/// Header + language picker for Sign in / Sign up flows.
 class AuthFlowLayout extends ConsumerWidget {
   const AuthFlowLayout({
     super.key,
@@ -62,12 +62,6 @@ class AuthFlowLayout extends ConsumerWidget {
                           ),
                           child: Column(
                             children: <Widget>[
-                              Image.asset(
-                                'assets/images/GKLogo.png',
-                                height: 88,
-                                fit: BoxFit.contain,
-                              ),
-                              SizedBox(height: s.isEnglish ? 10 : 8),
                               s.isEnglish
                                   ? Text(
                                     localizedTitle,
