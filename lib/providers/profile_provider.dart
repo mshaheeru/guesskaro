@@ -103,15 +103,11 @@ class ProfileNotifier extends AsyncNotifier<ProfileModel?> {
   }
 
   Future<void> awardXpAndCoins({required int xp, required int coins}) async {
-    final previous = state.valueOrNull;
     if (!kAuthEnabled) {
       final ProfileModel updated = await _localProfileRepository.addXpAndCoins(
         xp: xp,
         coins: coins,
       );
-      if (previous != null && updated.level > previous.level) {
-        ref.read(levelUpProvider.notifier).state = true;
-      }
       state = AsyncData<ProfileModel?>(updated);
       return;
     }
@@ -125,9 +121,6 @@ class ProfileNotifier extends AsyncNotifier<ProfileModel?> {
         xp: xp,
         coins: coins,
       );
-      if (previous != null && updated.level > previous.level) {
-        ref.read(levelUpProvider.notifier).state = true;
-      }
       state = AsyncData<ProfileModel?>(updated);
       return;
     }
@@ -137,10 +130,6 @@ class ProfileNotifier extends AsyncNotifier<ProfileModel?> {
       xp: xp,
       coins: coins,
     );
-
-    if (previous != null && updated.level > previous.level) {
-      ref.read(levelUpProvider.notifier).state = true;
-    }
 
     state = AsyncData<ProfileModel?>(updated);
   }
@@ -256,10 +245,6 @@ class ProfileNotifier extends AsyncNotifier<ProfileModel?> {
 final AsyncNotifierProvider<ProfileNotifier, ProfileModel?>
 profileNotifierProvider = AsyncNotifierProvider<ProfileNotifier, ProfileModel?>(
   ProfileNotifier.new,
-);
-
-final StateProvider<bool> levelUpProvider = StateProvider<bool>(
-  (Ref ref) => false,
 );
 
 final Provider<int> currentCoinsProvider = Provider<int>((Ref ref) {

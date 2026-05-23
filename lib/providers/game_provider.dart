@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_config.dart';
+import '../core/constants/mastery_constants.dart';
 import '../core/constants/scoring_constants.dart';
 import '../core/services/game_sound_service.dart';
 import '../core/utils/random_uuid.dart';
@@ -21,11 +22,17 @@ enum GamePhase {
   showingResultFlash,
   showingReveal,
   showingMeaningQuiz,
+  /// Index not advanced yet — photo screen commits the next card.
+  preparingNextPhotoRound,
+  /// Story mode bridge between cards.
+  storyConnector,
   sessionComplete,
   error,
 }
 
 enum ResultFlashKind { correct, incorrect, timeout }
+
+enum PhotoQuizMode { textMcq, imageGrid, scenarioMcq }
 
 /// One completed phrase row for summary + persistence.
 class PhraseRoundResult {
@@ -125,13 +132,26 @@ class GameState {
     this.completedRounds = const <PhraseRoundResult>[],
     this.sessionTotals,
     this.lastPhotoElapsedSeconds = 0,
+    this.currentMasteryLevel = 0,
+    this.photoQuizMode = PhotoQuizMode.textMcq,
+    this.imageGridOptions = const <PhraseImageOption>[],
+    this.useFillBlankOnReveal = false,
+    this.blankWordOptions = const <String>[],
+    this.blankWordCorrectIndex = -1,
+    this.fillBlankSentenceDisplay,
+    this.storyId,
+    this.storyLinesUrdu = const <String>[],
+    this.storyConnectorIndex = 0,
+    this.sessionPhraseIds = const <String>[],
   });
 
   factory GameState.initial() {
-    return GameState(
+    return const GameState(
       phase: GamePhase.idle,
       mode: ScoringConstants.modeQuickPlay,
       roundCount: 10,
+      storyLinesUrdu: <String>[],
+      sessionPhraseIds: <String>[],
     );
   }
 
@@ -196,6 +216,35 @@ class GameState {
   /// Seconds used on photo round (persisted before phase changes hide the timer snapshot).
   final int lastPhotoElapsedSeconds;
 
+  final int currentMasteryLevel;
+  final PhotoQuizMode photoQuizMode;
+  final List<PhraseImageOption> imageGridOptions;
+  final bool useFillBlankOnReveal;
+  final List<String> blankWordOptions;
+  final int blankWordCorrectIndex;
+  final String? fillBlankSentenceDisplay;
+  final String? storyId;
+  final List<String> storyLinesUrdu;
+  final int storyConnectorIndex;
+  final List<String> sessionPhraseIds;
+
+  bool get reverseMode => mode == ScoringConstants.modeReverse;
+
+  bool get storyMode => mode == ScoringConstants.modeStory;
+
+  bool get _hasStoryLines => storyLinesUrdu.isNotEmpty;
+
+  String? get currentStoryLine {
+    if (!_hasStoryLines) return null;
+    if (storyConnectorIndex < 0 ||
+        storyConnectorIndex >= storyLinesUrdu.length) {
+      return null;
+    }
+    return storyLinesUrdu[storyConnectorIndex];
+  }
+
+  bool get photoTextMcqEnabled => photoQuizMode == PhotoQuizMode.textMcq;
+
   PhraseModel? get currentPhrase {
     if (phrases.isEmpty || currentIndex < 0 || currentIndex >= phrases.length) {
       return null;
@@ -243,6 +292,20 @@ class GameState {
     String? errorMessage,
     bool clearError = false,
     int? lastPhotoElapsedSeconds,
+    int? currentMasteryLevel,
+    PhotoQuizMode? photoQuizMode,
+    List<PhraseImageOption>? imageGridOptions,
+    bool? useFillBlankOnReveal,
+    List<String>? blankWordOptions,
+    int? blankWordCorrectIndex,
+    String? fillBlankSentenceDisplay,
+    bool clearFillBlankDisplay = false,
+    String? storyId,
+    bool clearStoryId = false,
+    List<String>? storyLinesUrdu,
+    bool clearStoryLines = false,
+    int? storyConnectorIndex,
+    List<String>? sessionPhraseIds,
   }) {
     return GameState(
       phase: phase ?? this.phase,
@@ -293,6 +356,22 @@ class GameState {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       lastPhotoElapsedSeconds:
           lastPhotoElapsedSeconds ?? this.lastPhotoElapsedSeconds,
+      currentMasteryLevel: currentMasteryLevel ?? this.currentMasteryLevel,
+      photoQuizMode: photoQuizMode ?? this.photoQuizMode,
+      imageGridOptions: imageGridOptions ?? this.imageGridOptions,
+      useFillBlankOnReveal: useFillBlankOnReveal ?? this.useFillBlankOnReveal,
+      blankWordOptions: blankWordOptions ?? this.blankWordOptions,
+      blankWordCorrectIndex:
+          blankWordCorrectIndex ?? this.blankWordCorrectIndex,
+      fillBlankSentenceDisplay: clearFillBlankDisplay
+          ? null
+          : (fillBlankSentenceDisplay ?? this.fillBlankSentenceDisplay),
+      storyId: clearStoryId ? null : (storyId ?? this.storyId),
+      storyLinesUrdu: clearStoryLines
+          ? const <String>[]
+          : (storyLinesUrdu ?? this.storyLinesUrdu),
+      storyConnectorIndex: storyConnectorIndex ?? this.storyConnectorIndex,
+      sessionPhraseIds: sessionPhraseIds ?? this.sessionPhraseIds,
     );
   }
 }
@@ -302,8 +381,10 @@ class GameNotifier extends Notifier<GameState> {
   Timer? _meaningTicker;
   Timer? _freezeTicker;
   Timer? _flashDelay;
+  Timer? _revealDelay;
   bool _persistedSession = false;
   bool _endSessionBusy = false;
+  bool _committingNextPhotoRound = false;
   static const String _timedModePrefKey = 'timed_mode_enabled';
 
   /// One RNG for all shuffles in a session — avoids multiple `Random()` seeds in same tick.
@@ -330,6 +411,8 @@ class GameNotifier extends Notifier<GameState> {
     _freezeTicker = null;
     _flashDelay?.cancel();
     _flashDelay = null;
+    _revealDelay?.cancel();
+    _revealDelay = null;
   }
 
   Future<bool> _loadTimedModeEnabled() async {
@@ -356,36 +439,68 @@ class GameNotifier extends Notifier<GameState> {
     String? category,
     String? difficulty,
     int count = 10,
+    List<String>? phraseIds,
+    String? storyId,
+    List<String>? storyLinesUrdu,
   }) async {
     final String normalizedMode = ScoringConstants.sanitizeGameMode(mode);
     _cancelAllTimers();
     _persistedSession = false;
     unawaited(_sounds.startTensionLoop());
     final bool timedModeEnabled = await _loadTimedModeEnabled();
+    final bool isStory = normalizedMode == ScoringConstants.modeStory;
+    final bool isReverse = normalizedMode == ScoringConstants.modeReverse;
+    final int sessionCount =
+        phraseIds != null && phraseIds.isNotEmpty ? phraseIds.length : count;
+
     state = state.copyWith(
       phase: GamePhase.loadingPhrases,
       mode: normalizedMode,
       category: category,
       difficulty: difficulty,
       timedModeEnabled: timedModeEnabled,
-      roundCount: count,
+      roundCount: sessionCount,
+      storyId: storyId,
+      storyLinesUrdu: storyLinesUrdu ?? const <String>[],
+      clearStoryLines: storyLinesUrdu == null || storyLinesUrdu.isEmpty,
+      storyConnectorIndex: 0,
+      sessionPhraseIds: phraseIds ?? const <String>[],
+      clearStoryId: storyId == null && !isStory,
       clearError: true,
       clearSessionTotals: true,
       completedRounds: const <PhraseRoundResult>[],
     );
 
     try {
-      final List<PhraseModel> session = await _phrases.getSessionPhrases(
-        mode: normalizedMode,
-        category: category,
-        difficulty: difficulty,
-        count: count,
-      );
+      final String userId = ref.read(activeUserIdProvider) ?? kLocalGuestUserId;
+      late final List<PhraseModel> session;
+
+      if (phraseIds != null && phraseIds.isNotEmpty) {
+        session = await _phrases.fetchPhrasesByIds(phraseIds);
+      } else if (isReverse) {
+        session = await _phrases.getReverseSessionPhrases(
+          userId: userId,
+          count: sessionCount,
+        );
+      } else {
+        session = await _phrases.getSessionPhrases(
+          mode: normalizedMode,
+          category: category,
+          difficulty: difficulty,
+          count: sessionCount,
+        );
+      }
+
       if (session.isEmpty) {
         unawaited(_sounds.stopAmbientLoop());
+        final String emptyMessage = isReverse
+            ? 'الٹا موڈ کے لیے کم از کم تین محاورے سطح ۳ پر ہوں۔'
+            : isStory
+                ? 'کہانی کے جملے دستیاب نہیں۔'
+                : 'کوئی جملہ دستیاب نہیں۔';
         state = state.copyWith(
           phase: GamePhase.error,
-          errorMessage: 'کوئی جملہ دستیاب نہیں۔',
+          errorMessage: emptyMessage,
         );
         return;
       }
@@ -397,7 +512,26 @@ class GameNotifier extends Notifier<GameState> {
         maxStreak: 0,
         completedRounds: const <PhraseRoundResult>[],
       );
-      _setupCurrentCard();
+
+      if (isStory && (storyLinesUrdu?.isNotEmpty ?? false)) {
+        final int expectedLines = session.length + 1;
+        if (storyLinesUrdu!.length != expectedLines) {
+          unawaited(_sounds.stopAmbientLoop());
+          state = state.copyWith(
+            phase: GamePhase.error,
+            errorMessage:
+                'کہانی کی سطور غلط ہیں ($expectedLines متوقع، ${storyLinesUrdu.length} ملے)۔',
+          );
+          return;
+        }
+        state = state.copyWith(
+          phase: GamePhase.storyConnector,
+          storyConnectorIndex: 0,
+        );
+        return;
+      }
+
+      await _setupCurrentCard();
     } catch (e) {
       unawaited(_sounds.stopAmbientLoop());
       state = state.copyWith(
@@ -407,7 +541,7 @@ class GameNotifier extends Notifier<GameState> {
     }
   }
 
-  void _setupCurrentCard() {
+  Future<void> _setupCurrentCard() async {
     _cancelAllTimers();
     final PhraseModel? phrase = state.currentPhrase;
     if (phrase == null) {
@@ -418,17 +552,59 @@ class GameNotifier extends Notifier<GameState> {
       return;
     }
 
-    final List<String> photoOpts = _buildPhotoPhraseChoices(phrase);
-    final int correctIdx = photoOpts.indexWhere(
-      (String o) => o == phrase.urduPhrase,
+    final String userId = ref.read(activeUserIdProvider) ?? kLocalGuestUserId;
+    final int storedLevel = await _phrases.getMasteryLevel(
+      userId: userId,
+      phraseId: phrase.id,
     );
+    final int playLevel = MasteryConstants.playLevelForPhrase(
+      storedLevel: storedLevel,
+      hasScenarioUrdu: phrase.hasScenarioUrdu,
+    );
+
+    final bool isReverse = state.reverseMode;
+    final bool useImageGrid =
+        !isReverse && MasteryConstants.shouldUseImageGrid(playLevel);
+    final bool useFillBlank =
+        !isReverse && MasteryConstants.shouldUseFillBlankOnReveal(playLevel);
+
+    List<String> photoOpts = const <String>[];
+    List<PhraseImageOption> gridOpts = const <PhraseImageOption>[];
+    int photoCorrectIdx = 0;
+    PhotoQuizMode quizMode = PhotoQuizMode.textMcq;
+
+    if (useImageGrid) {
+      gridOpts = _buildImageGridOptions(phrase, state.phrases);
+      photoCorrectIdx = gridOpts.indexWhere(
+        (PhraseImageOption o) => o.phraseId == phrase.id,
+      );
+      if (photoCorrectIdx < 0) photoCorrectIdx = 0;
+      quizMode = PhotoQuizMode.imageGrid;
+    } else {
+      final int optionCount = isReverse
+          ? 4
+          : MasteryConstants.photoOptionCountForLevel(playLevel);
+      photoOpts = _buildPhotoPhraseChoices(phrase, optionCount: optionCount);
+      photoCorrectIdx = photoOpts.indexWhere(
+        (String o) => o == phrase.urduPhrase,
+      );
+      if (photoCorrectIdx < 0) photoCorrectIdx = 0;
+      quizMode = PhotoQuizMode.textMcq;
+    }
 
     state = state.copyWith(
       phase: GamePhase.showingPhoto,
+      currentMasteryLevel: playLevel,
+      photoQuizMode: quizMode,
       photoOptions: photoOpts,
-      photoCorrectIndex: correctIdx >= 0 ? correctIdx : 0,
+      imageGridOptions: gridOpts,
+      photoCorrectIndex: photoCorrectIdx,
+      useFillBlankOnReveal: useFillBlank,
       meaningOptions: const <String>[],
       meaningCorrectIndex: -1,
+      blankWordOptions: const <String>[],
+      blankWordCorrectIndex: -1,
+      clearFillBlankDisplay: true,
       meaningRevealReady: false,
       eliminatedPhotoIndices: {},
       eliminateUsed: false,
@@ -464,10 +640,79 @@ class GameNotifier extends Notifier<GameState> {
     return pool.take(4).toList();
   }
 
-  List<String> _buildPhotoPhraseChoices(PhraseModel phrase) {
+  List<String> _buildPhotoPhraseChoices(
+    PhraseModel phrase, {
+    int optionCount = 4,
+  }) {
+    final int target = optionCount.clamp(2, 4);
     final List<String> wrong = List<String>.from(phrase.photoWrongOptions)
       ..shuffle(_rng);
     final List<String> pool = <String>[phrase.urduPhrase];
+    int i = 0;
+    while (pool.length < target && i < wrong.length) {
+      if (!pool.contains(wrong[i])) {
+        pool.add(wrong[i]);
+      }
+      i++;
+    }
+    while (pool.length < target) {
+      pool.add('${phrase.urduPhrase} ${pool.length}');
+    }
+    pool.shuffle(_rng);
+    return pool.take(target).toList();
+  }
+
+  List<PhraseImageOption> _buildImageGridOptions(
+    PhraseModel current,
+    List<PhraseModel> sessionPhrases,
+  ) {
+    final List<PhraseModel> others =
+        sessionPhrases
+            .where(
+              (PhraseModel p) =>
+                  p.id != current.id && p.imageUrl.trim().isNotEmpty,
+            )
+            .toList()
+          ..shuffle(_rng);
+
+    final List<PhraseImageOption> pool = <PhraseImageOption>[
+      PhraseImageOption(
+        phraseId: current.id,
+        imageUrl: current.imageUrl,
+      ),
+    ];
+
+    for (final PhraseModel p in others) {
+      if (pool.length >= 4) break;
+      pool.add(PhraseImageOption(phraseId: p.id, imageUrl: p.imageUrl));
+    }
+
+    while (pool.length < 4) {
+      pool.add(
+        PhraseImageOption(
+          phraseId: '${current.id}_pad${pool.length}',
+          imageUrl: current.imageUrl,
+        ),
+      );
+    }
+
+    pool.shuffle(_rng);
+    return pool.take(4).toList();
+  }
+
+  List<String> _buildBlankWordChoices(PhraseModel phrase) {
+    final List<String> tokens = phrase.exampleTokens;
+    if (tokens.isEmpty) {
+      return _buildMeaningChoices(phrase);
+    }
+
+    final int rawIdx = phrase.blankWordIndex ?? 0;
+    final int blankIdx = rawIdx.clamp(0, tokens.length - 1);
+    final String correctWord = tokens[blankIdx];
+
+    final List<String> wrong = List<String>.from(phrase.blankWordWrongOptions)
+      ..shuffle(_rng);
+    final List<String> pool = <String>[correctWord];
     int i = 0;
     while (pool.length < 4 && i < wrong.length) {
       if (!pool.contains(wrong[i])) {
@@ -476,10 +721,25 @@ class GameNotifier extends Notifier<GameState> {
       i++;
     }
     while (pool.length < 4) {
-      pool.add('${phrase.urduPhrase} ${pool.length}');
+      pool.add('${correctWord}_${pool.length}');
     }
     pool.shuffle(_rng);
     return pool.take(4).toList();
+  }
+
+  String _buildFillBlankDisplay(PhraseModel phrase) {
+    final List<String> tokens = phrase.exampleTokens;
+    if (tokens.isEmpty) return phrase.exampleSentence;
+
+    final int rawIdx = phrase.blankWordIndex ?? 0;
+    final int blankIdx = rawIdx.clamp(0, tokens.length - 1);
+    return tokens
+        .asMap()
+        .entries
+        .map(
+          (MapEntry<int, String> e) => e.key == blankIdx ? '___' : e.value,
+        )
+        .join(' ');
   }
 
   void _startPhotoTimer() {
@@ -777,6 +1037,15 @@ class GameNotifier extends Notifier<GameState> {
       unawaited(_sounds.playWrong());
     }
 
+    final String userId = ref.read(activeUserIdProvider) ?? kLocalGuestUserId;
+    unawaited(
+      _phrases.updateMastery(
+        userId: userId,
+        phraseId: phrase.id,
+        wasCorrect: isCorrect,
+      ),
+    );
+
     state = state.copyWith(
       phase: GamePhase.showingResultFlash,
       streak: newStreak,
@@ -797,25 +1066,49 @@ class GameNotifier extends Notifier<GameState> {
 
   void proceedAfterPhotoFlash() {
     if (state.phase != GamePhase.showingResultFlash) return;
-    if (state.currentPhrase == null) return;
-
-    _prepareMeaningQuiz();
-  }
-
-  void _prepareMeaningQuiz() {
     final PhraseModel? phrase = state.currentPhrase;
     if (phrase == null) return;
 
-    final List<String> opts = _buildMeaningChoices(phrase);
-    final int cIdx = opts.indexWhere((String o) => o == phrase.meaningUrdu);
+    List<String> opts;
+    int cIdx;
+    String? fillDisplay;
+
+    if (state.useFillBlankOnReveal) {
+      opts = _buildBlankWordChoices(phrase);
+      final List<String> tokens = phrase.exampleTokens;
+      final int rawIdx = phrase.blankWordIndex ?? 0;
+      final int blankIdx =
+          tokens.isEmpty ? 0 : rawIdx.clamp(0, tokens.length - 1);
+      final String correctWord =
+          tokens.isEmpty ? phrase.meaningUrdu : tokens[blankIdx];
+      cIdx = opts.indexWhere((String o) => o == correctWord);
+      fillDisplay = _buildFillBlankDisplay(phrase);
+    } else {
+      opts = _buildMeaningChoices(phrase);
+      cIdx = opts.indexWhere((String o) => o == phrase.meaningUrdu);
+    }
 
     state = state.copyWith(
       phase: GamePhase.showingReveal,
       meaningRevealReady: true,
       meaningOptions: opts,
       meaningCorrectIndex: cIdx >= 0 ? cIdx : 0,
+      blankWordOptions: state.useFillBlankOnReveal ? opts : const <String>[],
+      blankWordCorrectIndex: cIdx >= 0 ? cIdx : 0,
+      fillBlankSentenceDisplay: fillDisplay,
       clearSelectedMeaning: true,
     );
+
+    _revealDelay?.cancel();
+    _revealDelay = Timer(
+      const Duration(milliseconds: 2800),
+      _beginMeaningQuizAfterRevealPause,
+    );
+  }
+
+  void _beginMeaningQuizAfterRevealPause() {
+    if (state.phase != GamePhase.showingReveal) return;
+    if (!state.meaningRevealReady) return;
     _startMeaningTimer();
     state = state.copyWith(phase: GamePhase.showingMeaningQuiz);
   }
@@ -824,7 +1117,9 @@ class GameNotifier extends Notifier<GameState> {
     if (state.phase != GamePhase.showingReveal || !state.meaningRevealReady) {
       return;
     }
-    _prepareMeaningQuiz();
+    _revealDelay?.cancel();
+    _revealDelay = null;
+    _beginMeaningQuizAfterRevealPause();
   }
 
   void proceedAfterMeaningExample() {
@@ -833,12 +1128,69 @@ class GameNotifier extends Notifier<GameState> {
 
   void _advanceToNextCardOrEnd() {
     final bool last = state.currentIndex >= state.phrases.length - 1;
+    _cancelAllTimers();
+
+    if (state.storyMode && state.storyLinesUrdu.isNotEmpty) {
+      if (last) {
+        state = state.copyWith(
+          phase: GamePhase.storyConnector,
+          storyConnectorIndex: state.phrases.length,
+          clearSelectedMeaning: true,
+        );
+        return;
+      }
+      state = state.copyWith(
+        phase: GamePhase.storyConnector,
+        storyConnectorIndex: state.currentIndex + 1,
+        clearSelectedMeaning: true,
+      );
+      return;
+    }
+
     if (last) {
       unawaited(endSession());
       return;
     }
-    state = state.copyWith(currentIndex: state.currentIndex + 1);
-    _setupCurrentCard();
+    state = state.copyWith(
+      phase: GamePhase.preparingNextPhotoRound,
+      clearSelectedMeaning: true,
+    );
+  }
+
+  /// Story bridge: intro, between-card lines, or closing beat before summary.
+  Future<void> advanceFromStoryConnector() async {
+    if (state.phase != GamePhase.storyConnector || _committingNextPhotoRound) {
+      return;
+    }
+    _committingNextPhotoRound = true;
+    try {
+      final int lineIdx = state.storyConnectorIndex;
+      if (lineIdx >= state.phrases.length) {
+        await endSession();
+        return;
+      }
+      if (lineIdx > 0) {
+        state = state.copyWith(currentIndex: state.currentIndex + 1);
+      }
+      await _setupCurrentCard();
+    } finally {
+      _committingNextPhotoRound = false;
+    }
+  }
+
+  /// Called only from [PhotoCardScreen] after route is visible — advances index then loads photo MCQ.
+  Future<void> commitNextPhotoRound() async {
+    if (state.phase != GamePhase.preparingNextPhotoRound ||
+        _committingNextPhotoRound) {
+      return;
+    }
+    _committingNextPhotoRound = true;
+    try {
+      state = state.copyWith(currentIndex: state.currentIndex + 1);
+      await _setupCurrentCard();
+    } finally {
+      _committingNextPhotoRound = false;
+    }
   }
 
   void submitMeaningAnswer(int index) {
@@ -1032,10 +1384,19 @@ class GameNotifier extends Notifier<GameState> {
         completedAt: DateTime.now(),
       );
 
-      final List<Map<String, dynamic>> rows =
-          rounds
-              .map((PhraseRoundResult r) => r.toProgressRow(userId: userId))
-              .toList();
+      final List<Map<String, dynamic>> rows = <Map<String, dynamic>>[];
+      for (final PhraseRoundResult r in rounds) {
+        final Map<String, dynamic> row = r.toProgressRow(userId: userId);
+        final Map<String, dynamic>? mastery =
+            await _phrases.getMasteryFieldsForPhrase(
+              userId: userId,
+              phraseId: r.phraseId,
+            );
+        if (mastery != null) {
+          row.addAll(mastery);
+        }
+        rows.add(row);
+      }
 
       await _sessions.saveFullSession(session: session, phraseResults: rows);
       _persistedSession = true;

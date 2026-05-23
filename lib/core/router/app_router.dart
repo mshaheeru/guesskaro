@@ -17,6 +17,7 @@ import '../../screens/library/phrase_library_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/settings/settings_screen.dart';
+import '../../screens/story/story_mode_screen.dart';
 import '../../screens/welcome/welcome_screen.dart';
 
 class AppRouter {
@@ -84,6 +85,11 @@ class AppRouter {
         path: '/library',
         name: 'library',
         builder: (_, __) => const PhraseLibraryScreen(),
+      ),
+      GoRoute(
+        path: '/story',
+        name: 'story',
+        builder: (_, __) => const StoryModeScreen(),
       ),
       GoRoute(
         path: '/profile',

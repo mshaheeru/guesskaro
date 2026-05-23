@@ -27,9 +27,12 @@ Future<void> showGameInstructionsSheet(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
               20,
-              4,
+              strings.isEnglish ? 8 : 16,
               20,
-              bottomInsetGap(sheetContext, gap: 12),
+              bottomInsetGap(
+                sheetContext,
+                gap: strings.isEnglish ? 14 : 26,
+              ),
             ),
             child: _GameInstructionsBody(strings: strings),
           ),
@@ -127,14 +130,6 @@ class _GameInstructionsBody extends StatelessWidget {
                 strings.isEnglish
                     ? strings.helpScoresBodyEn
                     : AppStrings.helpScoresBody,
-              ),
-              _gap(),
-              _heading(strings.helpLevelsSectionTitle),
-              const SizedBox(height: 10),
-              _body(
-                strings.isEnglish
-                    ? strings.helpLevelsBodyEn
-                    : AppStrings.helpLevelsBody,
               ),
               _gap(),
               _heading(strings.helpStreakSectionTitle),

@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../core/constants/leaderboard_metric.dart';
 import '../../core/constants/scoring_constants.dart';
 import '../../core/constants/urdu_utils.dart';
+import '../../data/models/leaderboard_entry_model.dart';
 import '../../providers/locale_provider.dart';
 
 /// UI chrome only (menus, settings). Game phrase content may stay Urdu for learning.
@@ -130,12 +132,17 @@ class UiStrings {
   String get playerFallback => isEnglish ? 'Player' : 'کھلاڑی';
   String get homeTitle => isEnglish ? 'GuessKaro' : 'گیس کرو';
   String get quickPlay => isEnglish ? 'Quick play' : 'فوری کھیل';
+
+  String get homeModesSection =>
+      isEnglish ? 'Pick a mode' : 'موڈ منتخب کریں';
   String get speedRound => isEnglish ? 'Speed round' : 'تیز راؤنڈ';
   String get categoryMode => isEnglish ? 'Category' : 'زمرہ';
   String speedLockedLabel(int levelNeeded) =>
       isEnglish
           ? 'Unlocks at level $levelNeeded'
           : 'لیول ${toUrduNumerals(levelNeeded)} پر کھلے گا';
+
+  String get modeCardLockedFallback => isEnglish ? 'Locked' : 'بند';
 
   String get streakLabelPrefix => isEnglish ? '🔥 Streak:' : '🔥 سٹریک:';
   String get dailyGoalInline => isEnglish ? 'Today\'s goal:' : 'آج کا ہدف:';
@@ -144,6 +151,39 @@ class UiStrings {
 
   String get leaderboardHomeTile =>
       isEnglish ? 'Leaderboard' : 'لیڈر بورڈ';
+
+  /// Leaderboard screen app bar / title (same word as tile).
+  String get leaderboardScreenTitle => leaderboardHomeTile;
+
+  String get leaderboardTabSessionStreak =>
+      isEnglish ? 'Streak' : 'سٹرِیک';
+
+  String get leaderboardTabDailyStreak =>
+      isEnglish ? 'Daily streak' : 'روزانہ سٹرِیک';
+
+  String get leaderboardTabTotalScore =>
+      isEnglish ? 'Total score' : 'کل اسکور';
+
+  String get leaderboardEmpty =>
+      isEnglish ? 'No leaderboard data yet.' : 'ابھی لیڈر بورڈ خالی ہے۔';
+
+  String leaderboardYourRank(int rank) =>
+      isEnglish ? 'Your rank: #$rank' : 'آپ کی رینک: ${toUrduNumerals(rank)}';
+
+  String leaderboardScoreLine(
+    LeaderboardEntryModel entry,
+    LeaderboardMetric metric,
+  ) {
+    final int score = entry.scoreFor(metric);
+    switch (metric) {
+      case LeaderboardMetric.sessionStreak:
+        return isEnglish ? '🔥 $score' : '🔥 ${toUrduNumerals(score)}';
+      case LeaderboardMetric.dailyStreak:
+        return isEnglish ? '📅 $score' : '📅 ${toUrduNumerals(score)}';
+      case LeaderboardMetric.totalScore:
+        return isEnglish ? '⭐ $score' : '⭐ ${toUrduNumerals(score)}';
+    }
+  }
 
   String get helpInstructionsCardTitle =>
       isEnglish ? 'Game guide' : AppStrings.helpInstructionsCardTitleUr;
@@ -177,8 +217,8 @@ class UiStrings {
       isEnglish ? 'Why we built GuessKaro' : AppStrings.helpMissionTitle;
 
   String get helpMissionBodyEn =>
-      'GuessKaro is here to teach everyday Urdu idiom—and to make that learning feel joyful, fast, and a little addictive. '
-      'Our intent is gentle education: revive curiosity for Urdu, keep its wit alive, and help phrases stick through play—not drills.';
+      'GuessKaro helps kids and families use screen time in a positive way—learning everyday Urdu idioms through play. '
+      'Urdu is a beautiful language, yet it is often neglected and forgotten; this app is our attempt to bring it back with joy, not drills.';
 
   String get helpHowToSectionTitle =>
       isEnglish ? 'How a round flows' : AppStrings.helpHowToPlayTitle;
@@ -197,7 +237,7 @@ class UiStrings {
       isEnglish ? 'Levels & XP' : AppStrings.helpLevelsTitle;
 
   String get helpLevelsBodyEn =>
-      'You gain XP when you nail answers and complete cards; the XP bar climbs toward your next title. Speed Round unlocks at level 5.';
+      'You gain XP when you nail answers and complete cards.';
 
   String get helpStreakSectionTitle =>
       isEnglish ? 'Daily streak (Home)' : AppStrings.helpStreakTitle;
@@ -213,7 +253,7 @@ class UiStrings {
     final int f = ScoringConstants.freezeHintCost;
     if (isEnglish) {
       return 'You earn coins from strong rounds. Spend them on the photo round: Eliminate removes wrong options ($e coins) '
-          'and Freeze pauses the timer ($f coins). Clearing your daily progress also feeds bonus XP—you will see it after sessions.';
+          'and Freeze pauses the timer ($f coins).';
     }
     return AppStrings.helpCoinsBodyUr(
       toUrduNumerals(e),
@@ -224,13 +264,17 @@ class UiStrings {
   String get helpGotIt =>
       isEnglish ? 'Got it' : AppStrings.helpGotItUr;
 
-  String get navHome => isEnglish ? 'Home' : 'گھر';
+  /// Bottom tab: keep Latin "Home" in Urdu UI (گھر means house, not app home).
+  String get navHome => 'Home';
   String get navLibrary => isEnglish ? 'Library' : 'لائبریری';
   String get libraryTitle => isEnglish ? 'Idioms Library' : 'کتب خانہ';
   String get navProfile => isEnglish ? 'Profile' : 'پروفائل';
 
   /// Bottom bar (Roman script common for system-style labels in UR UI).
   String get navSettings => isEnglish ? 'Settings' : 'سیٹنگز';
+
+  String profileTotalXp(int xp) =>
+      isEnglish ? '$xp XP total' : 'کل ${toUrduNumerals(xp)} XP';
 
   /// Recent sessions row — maps stored mode keys to localized labels.
   String sessionModeDisplay(String rawMode) {
@@ -248,8 +292,101 @@ class UiStrings {
       isEnglish ? 'Search idiom…' : 'محاورہ تلاش کریں…';
   String libraryPhraseCountInline(int count) =>
       isEnglish ? '$count found' : '${toUrduNumerals(count)} محاورے ملے';
+  String libraryMasteryProgress(int completed, int total) => isEnglish
+      ? '$completed/$total idioms mastered'
+      : AppStrings.libraryMasteryProgressUr(
+          toUrduNumerals(completed),
+          toUrduNumerals(total),
+        );
+  String get gamePickCorrectImage => isEnglish
+      ? 'Pick the correct image'
+      : AppStrings.gamePickCorrectImage;
+  String get gameFillBlankPrompt => isEnglish
+      ? 'Pick the word for the blank'
+      : AppStrings.gameFillBlankPrompt;
+  String masteryLabelForLevel(int level) {
+    switch (level.clamp(0, 5)) {
+      case 0:
+        return isEnglish ? 'Stranger' : AppStrings.masteryLabel0;
+      case 1:
+        return isEnglish ? 'Acquaintance' : AppStrings.masteryLabel1;
+      case 2:
+        return isEnglish ? 'Familiar' : AppStrings.masteryLabel2;
+      case 3:
+        return isEnglish ? 'Recognition' : AppStrings.masteryLabel3;
+      case 4:
+        return isEnglish ? 'Strong' : AppStrings.masteryLabel4;
+      case 5:
+        return isEnglish ? 'Mastered' : AppStrings.masteryLabel5;
+      default:
+        return isEnglish ? 'Stranger' : AppStrings.masteryLabel0;
+    }
+  }
+
+  String get homeLibraryTile =>
+      isEnglish ? 'Idiom library' : AppStrings.homeLibraryTile;
+  String get homeLibrarySubtitle => isEnglish
+      ? 'Mastered idioms only'
+      : AppStrings.homeLibrarySubtitle;
+  String get librarySubtitle => isEnglish
+      ? 'Only idioms you have fully mastered'
+      : AppStrings.librarySubtitleUr;
+  String get libraryEmptyMastered => isEnglish
+      ? 'No mastered idioms yet.\nPlay Quick Play to unlock gold cards here.'
+      : AppStrings.libraryEmptyMasteredUr;
+  String libraryMasteredCountInline(int count) => isEnglish
+      ? '$count mastered'
+      : '${toUrduNumerals(count)} ${AppStrings.libraryMasteredCountUr}';
+  String get homeMasterySection =>
+      isEnglish ? 'Your progress' : AppStrings.homeMasterySection;
+  String get profileOpenLibrary =>
+      isEnglish ? 'Open library' : AppStrings.profileOpenLibrary;
+  String gameMasteryTierLabel(int level) => isEnglish
+      ? 'Tier ${toUrduNumerals(level)}'
+      : '${AppStrings.gameMasteryTier} ${toUrduNumerals(level)}';
+  String get libraryMasteryTierLabel => isEnglish
+      ? 'Mastery'
+      : AppStrings.libraryMasteryTierLabel;
+  String get homeHowToPlayLink =>
+      isEnglish ? 'How to play' : AppStrings.helpInstructionsCardTitleUr;
   String get libraryNoResults =>
       isEnglish ? 'No matches' : 'کوئی نتیجہ نہیں ملا';
+
+  String get homeStoryModeTile =>
+      isEnglish ? 'Story mode' : AppStrings.homeStoryModeTile;
+  String get homeStoryModeSubtitle => isEnglish
+      ? 'Three-idiom stories'
+      : AppStrings.homeStoryModeSubtitle;
+  String get homeReverseModeTile =>
+      isEnglish ? 'Reverse mode' : AppStrings.homeReverseModeTile;
+  String get homeReverseModeSubtitle => isEnglish
+      ? 'Meaning → idiom'
+      : AppStrings.homeReverseModeSubtitle;
+  String get reverseModeLocked => isEnglish
+      ? 'Learn 3 idioms first (tier 3+)'
+      : AppStrings.reverseModeLocked;
+  String get storyModeTitle =>
+      isEnglish ? 'Story mode' : AppStrings.storyModeTitle;
+  String get storyModePickStory => isEnglish
+      ? 'Pick a story'
+      : AppStrings.storyModePickStory;
+  String get storyModeSubtitle => isEnglish
+      ? 'Three idioms per story, in order'
+      : AppStrings.storyModeSubtitle;
+  String storyPhraseCount(int count) => isEnglish
+      ? '$count idioms'
+      : '${toUrduNumerals(count)} ${AppStrings.storyPhraseCountUr}';
+  String get gameReversePrompt =>
+      isEnglish ? 'Pick the correct idiom' : AppStrings.gameReversePrompt;
+  String get gameStoryConnectorHint => isEnglish
+      ? 'Next card…'
+      : AppStrings.gameStoryConnectorHint;
+  String get storySessionEmpty => isEnglish
+      ? 'Story phrases are not available.'
+      : AppStrings.storySessionEmpty;
+  String get reverseSessionEmpty => isEnglish
+      ? 'Need at least three tier-3+ idioms for Reverse mode.'
+      : AppStrings.reverseSessionEmpty;
 
   // Category sheet (values stay Urdu for phrase DB)
   String get pickCategory => isEnglish ? 'Choose category' : 'زمرہ چنیں';
@@ -269,8 +406,33 @@ class UiStrings {
   }
 
   // Settings
-  String get settingsTitle => isEnglish ? 'Settings' : 'ترتیبات';
+  String get settingsTitle => isEnglish ? 'Settings' : 'سیٹنگز';
+
+  String get settingsSectionLanguage =>
+      isEnglish ? 'Language' : 'زبان';
+
+  String get settingsSectionAppearance =>
+      isEnglish ? 'Appearance' : 'ظاہری شکل';
+
+  String get appThemeLabel => isEnglish ? 'App theme' : 'ایپ تھیم';
+
+  String get themeClassicLabel =>
+      isEnglish ? 'Classic' : 'کلاسک';
+
+  String get themeSunnyLabel =>
+      isEnglish ? 'Sunny Quiz' : 'سنی کوئز';
+
   String get gameplaySection => isEnglish ? 'Gameplay' : 'گیم پلے';
+
+  String get settingsSectionAbout => isEnglish ? 'About' : 'متعلق';
+
+  String get timedModeTitle =>
+      isEnglish ? 'Time based mode' : 'وقت پر مبنی موڈ';
+
+  String get timedModeSubtitle =>
+      isEnglish
+          ? 'Show countdowns in game rounds'
+          : 'راؤنڈز میں الٹی گنتی دکھائیں';
   String get sound => isEnglish ? 'Sound' : 'آواز';
   String get haptic => isEnglish ? 'Haptics' : 'ہاپٹک';
   String get accountSection => isEnglish ? 'Account' : 'اکاؤنٹ';
@@ -342,8 +504,19 @@ class UiStrings {
   String get gameVoiceRetry => isEnglish ? 'Try again' : 'دوبارہ کوشش کریں';
   String get gameHintEliminate => isEnglish ? 'Eliminate' : 'حذف';
   String get gameHintFreeze => isEnglish ? 'Freeze' : 'جم';
+
+  String get gameFrozenLabel =>
+      isEnglish ? 'Frozen' : 'منجمد';
   String get gameListenExample => isEnglish ? 'See example' : 'مثال دیکھیں';
   String get gameMeaningQuiz => isEnglish ? 'Meaning quiz' : 'معنی کا کوئز';
+
+  String get gameRevealPhraseLabel =>
+      isEnglish ? 'The phrase was' : 'یہ محاورہ تھا';
+
+  String get gameRevealAutoMeaningHint =>
+      isEnglish
+          ? 'Meaning quiz starts in a moment…'
+          : 'معنی کا کوئز تھوڑی دیر میں شروع ہوگا…';
   String get resultCorrect => isEnglish ? 'Correct!' : 'درست!';
   String get resultIncorrect => isEnglish ? 'Wrong' : 'غلط';
   String get resultTimeout => isEnglish ? 'Time up' : 'وقت ختم';
@@ -378,9 +551,6 @@ class UiStrings {
       isEnglish ? '= $total' : '= ${toUrduNumerals(total)}';
   String get summaryStartNextRound =>
       isEnglish ? 'Start next round' : 'اگلے راؤنڈ کا آغاز';
-  String get levelUpTitle => isEnglish ? 'Level up!' : 'لیول اپ!';
-  String get levelUpContinue =>
-      isEnglish ? 'Thanks, continue' : 'شکریہ! آگے بڑھو';
 
   // Profile
   String get profileTitle => isEnglish ? 'Profile' : 'پروفائل';

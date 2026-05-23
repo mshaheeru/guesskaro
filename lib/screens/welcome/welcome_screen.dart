@@ -263,13 +263,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                         ),
                                         boxShadow:
                                             selected
-                                                ? const <BoxShadow>[
+                                                ? <BoxShadow>[
                                                   BoxShadow(
                                                     color: AppColors.orangeGlow,
                                                     blurRadius: 16,
                                                   ),
                                                 ]
-                                                : const <BoxShadow>[],
+                                                : <BoxShadow>[],
                                       ),
                                       child: Center(
                                         child: Text(
@@ -346,7 +346,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: const BorderSide(
+                                    borderSide: BorderSide(
                                       color: AppColors.borderOrange,
                                       width: 1.5,
                                     ),

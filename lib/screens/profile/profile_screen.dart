@@ -17,12 +17,13 @@ import '../../providers/profile_provider.dart';
 import '../../providers/session_user_provider.dart';
 import '../../core/navigation/main_bottom_tab_nav.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/jp_screen_background.dart';
 import '../../widgets/jp_button_ghost.dart';
-import '../../widgets/xp_bar.dart';
 import '../../widgets/common/loading_shimmer.dart';
 import '../../widgets/common/error_state.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/urdu_text.dart';
+import '../../widgets/home/home_mastery_strip.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -34,14 +35,10 @@ class ProfileScreen extends ConsumerWidget {
     final String? userId = ref.watch(activeUserIdProvider);
     final UiStrings s = UiStrings.watch(ref);
 
-    final int level = profile?.level ?? 1;
-    final String tierUr = profile?.levelTitle ?? '';
-    final String tierLabel =
-        s.isEnglish ? s.levelTitle(level, urUrduTitle: tierUr) : tierUr;
-
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      body: RefreshIndicator(
+      body: JpScreenBackground(
+        child: RefreshIndicator(
         onRefresh:
             () => ref.read(profileNotifierProvider.notifier).refreshProfile(),
         child: ListView(
@@ -88,7 +85,7 @@ class ProfileScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: <Color>[AppColors.bgElevated, Colors.transparent],
@@ -104,7 +101,7 @@ class ProfileScreen extends ConsumerWidget {
                         shape: BoxShape.circle,
                         color: AppColors.orangeDim,
                         border: Border.all(color: AppColors.orange, width: 3),
-                        boxShadow: const <BoxShadow>[
+                        boxShadow: <BoxShadow>[
                           BoxShadow(
                             color: AppColors.orangeGlow,
                             blurRadius: 24,
@@ -120,27 +117,9 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(profile.displayName, style: AppTextStyles.enTitle),
-                    Text(
-                      tierLabel,
-                      style:
-                          s.isEnglish
-                              ? AppTextStyles.enBody.copyWith(
-                                  color: AppColors.orange,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
-                                )
-                              : AppTextStyles.urduBody.copyWith(
-                                  color: AppColors.orange,
-                                ),
-                    ),
-                    const SizedBox(height: 16),
-                    XpBar(
-                      level: level,
-                      xpPct: profile.xpBarFractionWithinCurrentLevel,
-                    ),
                     const SizedBox(height: 6),
                     Text(
-                      '${profile.xp} / ${profile.xp + profile.xpForNextLevel} XP to next level',
+                      s.profileTotalXp(profile.xp),
                       style: AppTextStyles.enCaption,
                     ),
                   ],
@@ -189,6 +168,14 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
             ],
+            const SizedBox(height: 12),
+            const HomeMasteryStrip(),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: () => context.push('/library'),
+              icon: const Icon(Icons.menu_book_rounded),
+              label: Text(s.profileOpenLibrary),
+            ),
             const SizedBox(height: 16),
             Text(
               s.recentSessions,
@@ -270,6 +257,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
       bottomNavigationBar: BottomNavBar(
         selectedIndex: 1,

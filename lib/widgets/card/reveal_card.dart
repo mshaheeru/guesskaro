@@ -23,7 +23,7 @@ class RevealPhraseCard extends StatelessWidget {
         color: surfaceColor ?? AppColors.bgCard,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borderOrange),
-        boxShadow: const <BoxShadow>[
+        boxShadow: <BoxShadow>[
           BoxShadow(color: AppColors.orangeGlow, blurRadius: 20),
         ],
       ),

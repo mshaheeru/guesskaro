@@ -17,14 +17,18 @@ class LoadingShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color base =
+        AppColors.isSunny ? AppColors.paperWarm : AppColors.bgCard;
+    final Color highlight =
+        AppColors.isSunny ? AppColors.paperShade : AppColors.bgElevated;
     return Shimmer.fromColors(
-      baseColor: AppColors.bgCard,
-      highlightColor: AppColors.bgElevated,
+      baseColor: base,
+      highlightColor: highlight,
       child: Container(
         width: width ?? double.infinity,
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.bgCard,
+          color: base,
           borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
@@ -38,6 +42,10 @@ class PhraseCardShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color base =
+        AppColors.isSunny ? AppColors.paperWarm : AppColors.bgCard;
+    final Color highlight =
+        AppColors.isSunny ? AppColors.paperShade : AppColors.bgElevated;
     return Column(
       children: [
         ClipRRect(
@@ -45,9 +53,9 @@ class PhraseCardShimmer extends StatelessWidget {
           child: AspectRatio(
             aspectRatio: 4 / 5,
             child: Shimmer.fromColors(
-              baseColor: AppColors.bgCard,
-              highlightColor: AppColors.bgElevated,
-              child: Container(color: AppColors.bgCard),
+              baseColor: base,
+              highlightColor: highlight,
+              child: Container(color: base),
             ),
           ),
         ),

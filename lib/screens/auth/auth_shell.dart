@@ -263,10 +263,10 @@ class AuthAvatarPicker extends StatelessWidget {
               ),
               boxShadow:
                   isSel
-                      ? const <BoxShadow>[
+                      ? <BoxShadow>[
                         BoxShadow(color: AppColors.orangeGlow, blurRadius: 16),
                       ]
-                      : const <BoxShadow>[],
+                      : <BoxShadow>[],
             ),
             child: Center(
               child: Text(avatars[index], style: const TextStyle(fontSize: 24)),
@@ -303,7 +303,7 @@ InputDecoration authFieldDecoration(
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: const BorderSide(color: AppColors.borderOrange, width: 1.5),
+      borderSide: BorderSide(color: AppColors.borderOrange, width: 1.5),
     ),
   );
 }

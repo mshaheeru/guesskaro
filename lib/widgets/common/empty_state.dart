@@ -12,20 +12,36 @@ class EmptyState extends StatelessWidget {
   final String message;
   final String emoji;
 
+  static bool _usesRtlScript(String text) {
+    return RegExp(r'[\u0600-\u06FF\u0750-\u077F]').hasMatch(text);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final TextStyle? bodyStyle = Theme.of(context).textTheme.titleMedium;
+
+    final Widget messageWidget =
+        _usesRtlScript(message)
+            ? UrduText(
+              message,
+              style: bodyStyle,
+              textAlign: TextAlign.center,
+            )
+            : Text(
+              message,
+              style: bodyStyle,
+              textAlign: TextAlign.center,
+            );
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: <Widget>[
             Text(emoji, style: const TextStyle(fontSize: 34)),
-            const SizedBox(height: 10),
-            UrduText(
-              message,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            const SizedBox(height: 12),
+            messageWidget,
           ],
         ),
       ),

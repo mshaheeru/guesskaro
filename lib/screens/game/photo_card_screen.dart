@@ -6,6 +6,7 @@ import 'dart:async';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/scoring_constants.dart';
+import '../../core/constants/urdu_utils.dart';
 import '../../core/locale/ui_strings.dart';
 import '../../core/layout/bottom_inset.dart';
 import '../../core/services/phrase_guess_judge.dart';
@@ -13,6 +14,8 @@ import '../../data/models/phrase_model.dart';
 import '../../data/models/profile_model.dart';
 import '../../providers/game_provider.dart';
 import '../../providers/profile_provider.dart';
+import '../../widgets/card/image_grid_mcq.dart';
+import '../../widgets/mastery/mastery_badge.dart';
 import '../../widgets/card/photo_card.dart';
 import '../../widgets/common/loading_shimmer.dart';
 import '../../widgets/common/error_state.dart';
@@ -21,6 +24,8 @@ import '../../widgets/common/game_pop_scope.dart';
 import '../../widgets/coin_badge.dart';
 import '../../widgets/streak_badge.dart' as jp;
 import '../../widgets/timer/timer_bar.dart';
+import '../../widgets/game/story_connector_card.dart';
+import '../../widgets/common/urdu_text.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 class PhotoCardScreen extends ConsumerStatefulWidget {
@@ -40,10 +45,37 @@ class _PhotoCardScreenState extends ConsumerState<PhotoCardScreen> {
       gameNotifierProvider.select((GameState g) => g.currentPhrase?.id),
       (String? previous, String? next) {
         if (previous != next) {
-          setState(() => _photoInteractiveReady = false);
+          final bool reverse =
+              ref.read(gameNotifierProvider).reverseMode;
+          setState(
+            () => _photoInteractiveReady = reverse,
+          );
         }
       },
     );
+    ref.listenManual<GamePhase>(
+      gameNotifierProvider.select((GameState g) => g.phase),
+      (GamePhase? previous, GamePhase next) {
+        if (next == GamePhase.preparingNextPhotoRound) {
+          _scheduleCommitNextPhotoRound();
+        }
+      },
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleCommitNextPhotoRound();
+    });
+  }
+
+  void _scheduleCommitNextPhotoRound() {
+    if (ref.read(gameNotifierProvider).phase !=
+        GamePhase.preparingNextPhotoRound) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(
+        ref.read(gameNotifierProvider.notifier).commitNextPhotoRound(),
+      );
+    });
   }
 
   @override
@@ -70,6 +102,40 @@ class _PhotoCardScreenState extends ConsumerState<PhotoCardScreen> {
     });
 
     switch (game.phase) {
+      case GamePhase.storyConnector:
+        return GamePopScope(
+          child: Scaffold(
+            backgroundColor: AppColors.bgPrimary,
+            appBar: AppBar(title: Text(s.gameCardTitle)),
+            body: StoryConnectorCard(
+              connectorText:
+                  game.currentStoryLine ?? s.gameStoryConnectorHint,
+              nextLabel: s.nextBtn,
+              onNext: () {
+                ref
+                    .read(gameNotifierProvider.notifier)
+                    .advanceFromStoryConnector();
+              },
+            ),
+          ),
+        );
+      case GamePhase.preparingNextPhotoRound:
+        return GamePopScope(
+          child: Scaffold(
+            backgroundColor: AppColors.bgPrimary,
+            body: SafeArea(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  bottomInsetGap(context),
+                ),
+                child: const PhraseCardShimmer(),
+              ),
+            ),
+          ),
+        );
       case GamePhase.idle:
       case GamePhase.error:
       case GamePhase.loadingPhrases:
@@ -98,6 +164,11 @@ class _PhotoCardScreenState extends ConsumerState<PhotoCardScreen> {
                                   category: game.category,
                                   difficulty: game.difficulty,
                                   count: game.roundCount,
+                                  phraseIds: game.sessionPhraseIds.isEmpty
+                                      ? null
+                                      : game.sessionPhraseIds,
+                                  storyId: game.storyId,
+                                  storyLinesUrdu: game.storyLinesUrdu,
                                 ),
                       ),
                     const SizedBox(height: 24),
@@ -130,7 +201,12 @@ class _PhotoCardScreenState extends ConsumerState<PhotoCardScreen> {
 
     final int roundNo = game.currentIndex + 1;
     final int total = game.phrases.length;
+    final bool imageGridMode = game.photoQuizMode == PhotoQuizMode.imageGrid;
+    final bool reverseMode = game.reverseMode;
     final bool speakingMode =
+        !reverseMode &&
+        !imageGridMode &&
+        game.photoTextMcqEnabled &&
         (profile.valueOrNull?.inputMode ?? 'pick') == 'speak';
 
     return GamePopScope(
@@ -150,7 +226,7 @@ class _PhotoCardScreenState extends ConsumerState<PhotoCardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: AlignmentDirectional.centerStart,
                       child: IconButton(
                         onPressed: () => Navigator.of(context).maybePop(),
                         icon: const Icon(Icons.arrow_back_rounded),
@@ -159,12 +235,30 @@ class _PhotoCardScreenState extends ConsumerState<PhotoCardScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text(
-                          s.gameCardProgress(roundNo, total),
-                          style: AppTextStyles.enTitle.copyWith(fontSize: 16),
+                        Expanded(
+                          child: s.isEnglish
+                              ? Text(
+                                  s.gameCardProgress(roundNo, total),
+                                  style: AppTextStyles.enTitle.copyWith(
+                                    fontSize: 16,
+                                  ),
+                                )
+                              : UrduText(
+                                  s.gameCardProgress(roundNo, total),
+                                  style: AppTextStyles.urduHeadline.copyWith(
+                                    fontSize: 16,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                ),
                         ),
                         Row(
                           children: <Widget>[
+                            MasteryBadge(
+                              level: game.currentMasteryLevel,
+                              showLabel: true,
+                              compact: true,
+                            ),
+                            const SizedBox(width: 8),
                             jp.StreakBadge(count: game.streak),
                             const SizedBox(width: 8),
                             CoinBadge(amount: profile.valueOrNull?.coins ?? 0),
@@ -185,41 +279,113 @@ class _PhotoCardScreenState extends ConsumerState<PhotoCardScreen> {
                     if (game.photoHasTimer && game.photoFrozen)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          '❄️ Frozen',
-                          textAlign: TextAlign.end,
-                          style: AppTextStyles.enCaption.copyWith(
-                            color: AppColors.textMuted,
+                        child: s.isEnglish
+                            ? Text(
+                                '❄️ ${s.gameFrozenLabel}',
+                                textAlign: TextAlign.end,
+                                style: AppTextStyles.enCaption.copyWith(
+                                  color: AppColors.textMuted,
+                                ),
+                              )
+                            : UrduText(
+                                '❄️ ${s.gameFrozenLabel}',
+                                style: AppTextStyles.urduCaption.copyWith(
+                                  color: AppColors.textMuted,
+                                ),
+                                textAlign: TextAlign.start,
+                              ),
+                      ),
+                    if (!imageGridMode && !reverseMode) ...<Widget>[
+                      const SizedBox(height: 12),
+                      PhotoCard(
+                        key: ValueKey<String>(phrase.id),
+                        imageUrl: phrase.imageUrl,
+                        placeholderAspectRatio: 4 / 3,
+                        maxImageHeight:
+                            MediaQuery.sizeOf(context).height * 0.52,
+                        fit: BoxFit.contain,
+                        onImageReady: () {
+                          if (mounted) {
+                            setState(() => _photoInteractiveReady = true);
+                          }
+                        },
+                      ),
+                    ],
+                    if (reverseMode) ...<Widget>[
+                      const SizedBox(height: 12),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppColors.bgCard,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.borderSubtle),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: UrduText(
+                            phrase.meaningUrdu,
+                            style: AppTextStyles.urduTitle.copyWith(
+                              fontSize: 22,
+                              height: 1.6,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
-                    const SizedBox(height: 12),
-                    PhotoCard(
-                      key: ValueKey<String>(phrase.id),
-                      imageUrl: phrase.imageUrl,
-                      placeholderAspectRatio: 4 / 3,
-                      maxImageHeight: MediaQuery.sizeOf(context).height * 0.52,
-                      fit: BoxFit.contain,
-                      onImageReady: () {
-                        if (mounted) {
-                          setState(() => _photoInteractiveReady = true);
-                        }
-                      },
-                    ),
+                    ],
                     const SizedBox(height: 16),
-                    if (_photoInteractiveReady) ...<Widget>[
+                    if (imageGridMode || reverseMode || _photoInteractiveReady) ...<Widget>[
                       Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          speakingMode
-                              ? s.gameSpeakPhrasePrompt
-                              : s.gamePickCorrectPhrase,
-                          textAlign: TextAlign.left,
-                          style: AppTextStyles.enTitle.copyWith(fontSize: 16),
-                        ),
+                        alignment: AlignmentDirectional.centerStart,
+                        child: s.isEnglish
+                            ? Text(
+                                reverseMode
+                                    ? s.gameReversePrompt
+                                    : imageGridMode
+                                        ? s.gamePickCorrectImage
+                                        : speakingMode
+                                            ? s.gameSpeakPhrasePrompt
+                                            : s.gamePickCorrectPhrase,
+                                textAlign: TextAlign.start,
+                                style: AppTextStyles.enTitle.copyWith(
+                                  fontSize: 16,
+                                ),
+                              )
+                            : UrduText(
+                                reverseMode
+                                    ? s.gameReversePrompt
+                                    : imageGridMode
+                                        ? s.gamePickCorrectImage
+                                        : speakingMode
+                                            ? s.gameSpeakPhrasePrompt
+                                            : s.gamePickCorrectPhrase,
+                                style: AppTextStyles.urduHeadline.copyWith(
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.start,
+                              ),
                       ),
+                      if (imageGridMode) ...<Widget>[
+                        const SizedBox(height: 8),
+                        UrduText(
+                          phrase.urduPhrase,
+                          style: AppTextStyles.urduTitle.copyWith(
+                            fontSize: 22,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                       const SizedBox(height: 12),
-                      if (!speakingMode)
+                      if (imageGridMode)
+                        ImageGridMcq(
+                          options: game.imageGridOptions,
+                          selectedIndex: game.selectedPhotoIndex,
+                          correctIndex: game.photoCorrectIndex,
+                          eliminatedIndices: game.eliminatedPhotoIndices,
+                          onTap: (int i) => ref
+                              .read(gameNotifierProvider.notifier)
+                              .submitPhotoAnswer(i),
+                        )
+                      else if (!speakingMode)
                         ...List.generate(game.photoOptions.length, (int i) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
@@ -232,7 +398,8 @@ class _PhotoCardScreenState extends ConsumerState<PhotoCardScreen> {
                           disabled: game.phase != GamePhase.showingPhoto,
                         ),
                       const SizedBox(height: 8),
-                      if (!speakingMode) _HintButtonsRow(game: game),
+                      if (!speakingMode && !imageGridMode)
+                        _HintButtonsRow(game: game, strings: s),
                     ],
                   ],
                 ),
@@ -450,12 +617,24 @@ class _VoiceGuessPanelState extends ConsumerState<_VoiceGuessPanel> {
 }
 
 class _HintButtonsRow extends ConsumerWidget {
-  const _HintButtonsRow({required this.game});
+  const _HintButtonsRow({required this.game, required this.strings});
 
   final GameState game;
+  final UiStrings strings;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final String eliminateCoins = strings.isEnglish
+        ? '${ScoringConstants.eliminateHintCost}'
+        : toUrduNumerals(ScoringConstants.eliminateHintCost);
+    final String freezeCoins = strings.isEnglish
+        ? '${ScoringConstants.freezeHintCost}'
+        : toUrduNumerals(ScoringConstants.freezeHintCost);
+    final String eliminateLabel =
+        '➖ ${strings.gameHintEliminate} ($eliminateCoins🪙)';
+    final String freezeLabel =
+        '❄️ ${strings.gameHintFreeze} ($freezeCoins🪙)';
+
     return Row(
       children: <Widget>[
         Expanded(
@@ -476,10 +655,21 @@ class _HintButtonsRow extends ConsumerWidget {
                               .read(gameNotifierProvider.notifier)
                               .useEliminateHint()
                       : null,
-              child: Text(
-                '➖ Eliminate (${ScoringConstants.eliminateHintCost}🪙)',
-                style: AppTextStyles.enBody.copyWith(color: AppColors.wrong),
-              ),
+              child: strings.isEnglish
+                  ? Text(
+                      eliminateLabel,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.enBody.copyWith(
+                        color: AppColors.wrong,
+                      ),
+                    )
+                  : UrduText(
+                      eliminateLabel,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.urduBody.copyWith(
+                        color: AppColors.wrong,
+                      ),
+                    ),
             ),
           ),
         ),
@@ -505,12 +695,21 @@ class _HintButtonsRow extends ConsumerWidget {
                                 .read(gameNotifierProvider.notifier)
                                 .useFreezeHint()
                         : null,
-                child: Text(
-                  '❄️ Freeze (${ScoringConstants.freezeHintCost}🪙)',
-                  style: AppTextStyles.enBody.copyWith(
-                    color: const Color(0xFF64C8FF),
-                  ),
-                ),
+                child: strings.isEnglish
+                    ? Text(
+                        freezeLabel,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.enBody.copyWith(
+                          color: const Color(0xFF64C8FF),
+                        ),
+                      )
+                    : UrduText(
+                        freezeLabel,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.urduBody.copyWith(
+                          color: const Color(0xFF64C8FF),
+                        ),
+                      ),
               ),
             ),
           ),

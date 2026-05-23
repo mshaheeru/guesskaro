@@ -14,7 +14,7 @@ class AppStrings {
   static const String helpGotItUr = 'سمجھ آ گئی';
 
   static const String helpMissionBody =
-      'گیس کرو روزمرہ اردو، محاورے اور زبان کی چھو چھو دانائیاں سیکھنے کے لیے بنایا گیا ہے۔ ہم تعلیم کو ہلکا پھلکا اور مزیدار رکھنا چاہتے ہیں، تاکہ اردو کا حسن اور اس کی زندہ روایت دوبارہ آپ کے دل کے قریب آ جائے۔';
+      'گیس کرو بچوں اور خاندانوں کے لیے موبائل پر مثبت وقت گزارنے کا ذریعہ ہے—روزمرہ اردو محاورے کھیل کے ذریعے سیکھیں۔ اردو خوبصورت زبان ہے مگر اکثر نظرانداز ہو چکی ہے؛ یہ ہماری کوشش ہے کہ اسے خوشی کے ساتھ دوبارہ زندہ کیا جائے۔';
 
   static const String helpHowToPlayTitle = 'کھیل کیسے چلتا ہے';
 
@@ -89,4 +89,44 @@ class AppStrings {
   static const dailyGoal = 'آج کا ہدف';
   static const meaningLabel = 'معنی:';
   static const sessionComplete = 'سیشن مکمل';
+
+  /// Library mastery progress: "$completed/$total محاورے مکمل" (Urdu numerals).
+  static String libraryMasteryProgressUr(String completed, String total) =>
+      '$completed/$total محاورے مکمل';
+
+  static const gamePickCorrectImage = 'صحیح تصویر منتخب کریں';
+  static const gameFillBlankPrompt = 'خالی جگہ پر صحیح لفظ لگائیں';
+
+  static const masteryLabel0 = 'اجنبی';
+  static const masteryLabel1 = 'جان پہچان';
+  static const masteryLabel2 = 'آشنا';
+  static const masteryLabel3 = 'پہچان';
+  static const masteryLabel4 = 'مضبوط';
+  static const masteryLabel5 = 'مکمل';
+
+  static const homeLibraryTile = 'کتب خانہ';
+  static const homeLibrarySubtitle = 'صرف مکمل محاورے';
+  static const librarySubtitleUr = 'یہاں صرف وہ محاورے ہیں جنہیں آپ نے مکمل کر لیا';
+  static const libraryEmptyMasteredUr =
+      'ابھی کوئی محاورہ مکمل نہیں۔ جھٹ پٹ کھیل کر سونے والے کارڈز یہاں جمع کریں۔';
+  static const libraryMasteredCountUr = 'مکمل محاورے';
+  static const homeMasterySection = 'میری پیش رفت';
+  static const profileOpenLibrary = 'کتب خانہ کھولیں';
+  static const gameMasteryTier = 'سطح';
+  static const libraryMasteryTierLabel = 'مہارت';
+
+  static const homeStoryModeTile = 'کہانی موڈ';
+  static const homeStoryModeSubtitle = 'تین محاوروں کی کہانی';
+  static const homeReverseModeTile = 'الٹا موڈ';
+  static const homeReverseModeSubtitle = 'معنی سے محاورہ پہچانیں';
+  static const reverseModeLocked = 'پہلے 3 محاورے سیکھیں';
+  static const storyModeTitle = 'کہانی موڈ';
+  static const storyModePickStory = 'کہانی چنیں';
+  static const storyModeSubtitle = 'ہر کہانی میں تین محاورے، ترتیب سے';
+  static const storyPhraseCountUr = 'محاورے';
+  static const gameReversePrompt = 'صحیح محاورہ چنیں';
+  static const gameStoryConnectorHint = 'اگلا کارڈ…';
+  static const storySessionEmpty = 'کہانی کے جملے دستیاب نہیں۔';
+  static const reverseSessionEmpty =
+      'الٹا موڈ کے لیے کم از کم تین محاورے سطح ۳ پر ہوں۔';
 }

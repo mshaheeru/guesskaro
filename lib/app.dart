@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/constants/app_colors.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_theme_variant.dart';
 import 'providers/locale_provider.dart';
+import 'providers/theme_provider.dart';
 import 'widgets/common/phrase_photo_prefetch_host.dart';
 
 class JhatPatApp extends ConsumerWidget {
@@ -16,9 +19,15 @@ class JhatPatApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLang lang = ref.watch(appLangNotifierProvider);
+    final AppThemeVariant themeVariant = ref.watch(appThemeVariantProvider);
+    AppColors.activeVariant = themeVariant;
+
+    final TextDirection dir =
+        lang == AppLang.en ? TextDirection.ltr : TextDirection.rtl;
     return Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: dir,
       child: MaterialApp.router(
+        key: ValueKey<AppThemeVariant>(themeVariant),
         title: lang == AppLang.en ? 'GuessKaro' : 'گیس کرو',
         debugShowCheckedModeBanner: false,
         locale: _materialLocale,
@@ -28,7 +37,7 @@ class JhatPatApp extends ConsumerWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        theme: AppTheme.lightTheme,
+        theme: AppTheme.forVariant(themeVariant),
         routerConfig: AppRouter.router,
         builder: (BuildContext context, Widget? child) {
           return Stack(

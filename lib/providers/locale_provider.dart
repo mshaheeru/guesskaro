@@ -21,7 +21,7 @@ class AppLangNotifier extends Notifier<AppLang> {
       _hydrated = true;
       unawaited(_load());
     }
-    return AppLang.ur;
+    return AppLang.en;
   }
 
   Future<void> _load() async {

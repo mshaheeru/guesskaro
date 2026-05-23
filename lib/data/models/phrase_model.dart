@@ -13,6 +13,9 @@ class PhraseModel {
     required this.createdAt,
     this.wrongOptions = const <String>[],
     this.photoWrongOptions = const <String>[],
+    this.blankWordWrongOptions = const <String>[],
+    this.scenarioUrdu,
+    this.blankWordIndex,
   });
 
   final String id;
@@ -28,6 +31,9 @@ class PhraseModel {
   final DateTime createdAt;
   final List<String> wrongOptions;
   final List<String> photoWrongOptions;
+  final List<String> blankWordWrongOptions;
+  final String? scenarioUrdu;
+  final int? blankWordIndex;
 
   PhraseModel copyWith({
     String? id,
@@ -43,6 +49,9 @@ class PhraseModel {
     DateTime? createdAt,
     List<String>? wrongOptions,
     List<String>? photoWrongOptions,
+    List<String>? blankWordWrongOptions,
+    String? scenarioUrdu,
+    int? blankWordIndex,
   }) {
     return PhraseModel(
       id: id ?? this.id,
@@ -58,6 +67,10 @@ class PhraseModel {
       createdAt: createdAt ?? this.createdAt,
       wrongOptions: wrongOptions ?? this.wrongOptions,
       photoWrongOptions: photoWrongOptions ?? this.photoWrongOptions,
+      blankWordWrongOptions:
+          blankWordWrongOptions ?? this.blankWordWrongOptions,
+      scenarioUrdu: scenarioUrdu ?? this.scenarioUrdu,
+      blankWordIndex: blankWordIndex ?? this.blankWordIndex,
     );
   }
 
@@ -82,6 +95,13 @@ class PhraseModel {
               ?.map((dynamic option) => option as String)
               .toList() ??
           const <String>[],
+      blankWordWrongOptions:
+          (json['blank_word_wrong_options'] as List<dynamic>?)
+                  ?.map((dynamic option) => option as String)
+                  .toList() ??
+              const <String>[],
+      scenarioUrdu: json['scenario_urdu'] as String?,
+      blankWordIndex: json['blank_word_index'] as int?,
     );
   }
 
@@ -100,6 +120,27 @@ class PhraseModel {
       'created_at': createdAt.toIso8601String(),
       'wrong_options': wrongOptions,
       'photo_wrong_options': photoWrongOptions,
+      'blank_word_wrong_options': blankWordWrongOptions,
+      'scenario_urdu': scenarioUrdu,
+      'blank_word_index': blankWordIndex,
     };
   }
+
+  /// Tokens from [exampleSentence] (whitespace split).
+  List<String> get exampleTokens =>
+      exampleSentence.trim().split(RegExp(r'\s+'));
+
+  bool get hasScenarioUrdu =>
+      scenarioUrdu != null && scenarioUrdu!.trim().isNotEmpty;
+}
+
+/// One cell in the 2×2 image mastery grid.
+class PhraseImageOption {
+  const PhraseImageOption({
+    required this.phraseId,
+    required this.imageUrl,
+  });
+
+  final String phraseId;
+  final String imageUrl;
 }

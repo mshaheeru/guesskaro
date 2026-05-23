@@ -10,6 +10,8 @@ class ScoringConstants {
 
   static const String modeQuickPlay = 'quick_play';
   static const String modeSpeedRound = 'speed_round';
+  static const String modeStory = 'story';
+  static const String modeReverse = 'reverse';
 
   /// Legacy sessions may still persist `learn` — treated as quick play.
   static String sanitizeGameMode(String mode) =>

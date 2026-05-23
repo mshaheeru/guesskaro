@@ -38,7 +38,7 @@ class _ResultFlashScreenState extends State<ResultFlashScreen> {
             child: ConfettiWidget(
               confettiController: _controller,
               blastDirectionality: BlastDirectionality.explosive,
-              colors: const <Color>[
+              colors: <Color>[
                 AppColors.orange,
                 AppColors.gold,
                 AppColors.correct,
@@ -58,8 +58,11 @@ class _ResultFlashScreenState extends State<ResultFlashScreen> {
                     border: Border.all(color: AppColors.correct, width: 3),
                     color: AppColors.correct.withValues(alpha: 0.13),
                   ),
-                  child: const Center(
-                    child: Text('✓', style: TextStyle(fontSize: 50, color: AppColors.correct)),
+                  child: Center(
+                    child: Text(
+                      '✓',
+                      style: TextStyle(fontSize: 50, color: AppColors.correct),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

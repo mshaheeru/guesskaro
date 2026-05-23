@@ -10,29 +10,54 @@ import '../../data/models/phrase_model.dart';
 import '../../data/models/profile_model.dart';
 import '../../providers/game_provider.dart';
 import '../../providers/profile_provider.dart';
-import '../../widgets/card/photo_card.dart';
 import '../../widgets/card/reveal_image_card.dart';
-import '../../widgets/card/card_flip_animation.dart';
 import '../../widgets/common/game_pop_scope.dart';
 import '../../widgets/common/urdu_text.dart';
+import '../../widgets/mastery/mastery_badge.dart';
 import '../../widgets/mcq/mcq_option_tile.dart';
 import '../../widgets/coin_badge.dart';
 import '../../widgets/streak_badge.dart' as jp;
 import '../../widgets/timer/timer_bar.dart';
 
-class RevealCardScreen extends ConsumerWidget {
+class RevealCardScreen extends ConsumerStatefulWidget {
   const RevealCardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RevealCardScreen> createState() => _RevealCardScreenState();
+}
+
+class _RevealCardScreenState extends ConsumerState<RevealCardScreen> {
+  /// Kept for the whole reveal/meaning round so advancing index does not flash the next card.
+  PhraseModel? _pinnedPhrase;
+  int? _pinnedRoundIndex;
+
+  @override
+  Widget build(BuildContext context) {
     final GameState game = ref.watch(gameNotifierProvider);
     final UiStrings s = UiStrings.watch(ref);
     final AsyncValue<ProfileModel?> profile = ref.watch(
       profileNotifierProvider,
     );
 
+    ref.listen<GamePhase>(
+      gameNotifierProvider.select((GameState g) => g.phase),
+      (GamePhase? previous, GamePhase next) {
+        if (next == GamePhase.showingReveal) {
+          final GameState live = ref.read(gameNotifierProvider);
+          final PhraseModel? phrase = live.currentPhrase;
+          if (phrase != null && phrase.id != _pinnedPhrase?.id) {
+            setState(() {
+              _pinnedPhrase = phrase;
+              _pinnedRoundIndex = live.currentIndex;
+            });
+          }
+        }
+      },
+    );
+
     ref.listen<GameState>(gameNotifierProvider, (_, GameState next) {
-      if (next.phase == GamePhase.showingPhoto) {
+      if (next.phase == GamePhase.preparingNextPhotoRound ||
+          next.phase == GamePhase.storyConnector) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted) context.go('/game/photo-card');
         });
@@ -84,11 +109,22 @@ class RevealCardScreen extends ConsumerWidget {
                   ),
                 ),
           );
-          if (!context.mounted) return;
           ref.read(gameNotifierProvider.notifier).proceedAfterMeaningExample();
         });
       },
     );
+
+    if (game.phase == GamePhase.preparingNextPhotoRound ||
+        game.phase == GamePhase.storyConnector) {
+      return GamePopScope(
+        child: Scaffold(
+          backgroundColor: AppColors.bgPrimary,
+          body: const Center(
+            child: CircularProgressIndicator.adaptive(),
+          ),
+        ),
+      );
+    }
 
     switch (game.phase) {
       case GamePhase.idle:
@@ -108,7 +144,7 @@ class RevealCardScreen extends ConsumerWidget {
         break;
     }
 
-    final PhraseModel? phrase = game.currentPhrase;
+    final PhraseModel? phrase = _pinnedPhrase ?? game.currentPhrase;
     if (phrase == null && game.phase != GamePhase.sessionComplete) {
       return const GamePopScope(
         child: Scaffold(body: Center(child: Text('—'))),
@@ -123,8 +159,9 @@ class RevealCardScreen extends ConsumerWidget {
       );
     }
 
-    final int roundNo = game.currentIndex + 1;
+    final int roundNo = (_pinnedRoundIndex ?? game.currentIndex) + 1;
     final int total = game.phrases.length;
+    final bool showingMeaning = game.phase == GamePhase.showingMeaningQuiz;
 
     return GamePopScope(
       child: Scaffold(
@@ -155,6 +192,12 @@ class RevealCardScreen extends ConsumerWidget {
                         Text(s.gameRevealProgress(roundNo, total)),
                         Row(
                           children: <Widget>[
+                            MasteryBadge(
+                              level: game.currentMasteryLevel,
+                              showLabel: true,
+                              compact: true,
+                            ),
+                            const SizedBox(width: 8),
                             jp.StreakBadge(count: game.streak),
                             const SizedBox(width: 8),
                             CoinBadge(amount: profile.valueOrNull?.coins ?? 0),
@@ -162,37 +205,24 @@ class RevealCardScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    if (game.phase == GamePhase.showingPhoto)
-                      AspectRatio(
-                        aspectRatio: 4 / 3,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: ColoredBox(color: AppColors.bgPrimary),
+                    const SizedBox(height: 16),
+                    RevealImageCard(
+                      urduPhrase: phrase.urduPhrase,
+                      romanised: phrase.romanised,
+                      subtitle: showingMeaning ? null : s.gameRevealPhraseLabel,
+                    ),
+                    if (!showingMeaning) ...<Widget>[
+                      const SizedBox(height: 16),
+                      Text(
+                        s.gameRevealAutoMeaningHint,
+                        style: AppTextStyles.enCaption.copyWith(
+                          color: AppColors.textSecondary,
                         ),
-                      )
-                    else if (game.phase == GamePhase.showingReveal ||
-                        game.phase == GamePhase.showingMeaningQuiz)
-                      CardFlipAnimation(
-                        key: ValueKey<String>('flip-${phrase.id}'),
-                        frontWidget: PhotoCard(
-                          imageUrl: phrase.imageUrl,
-                          placeholderAspectRatio: 4 / 3,
-                          maxImageHeight: MediaQuery.sizeOf(context).height * 0.5,
-                          fit: BoxFit.contain,
-                        ),
-                        backWidget: RevealImageCard(
-                          urduPhrase: phrase.urduPhrase,
-                          aspectRatio: 4 / 3,
-                        ),
-                      )
-                    else
-                      RevealImageCard(
-                        urduPhrase: phrase.urduPhrase,
-                        aspectRatio: 4 / 3,
+                        textAlign: TextAlign.center,
                       ),
-                    const SizedBox(height: 12),
-                    if (game.phase == GamePhase.showingMeaningQuiz) ...<Widget>[
+                    ],
+                    if (showingMeaning) ...<Widget>[
+                      const SizedBox(height: 20),
                       if (game.meaningHasTimer)
                         TimerBar(
                           value:
@@ -208,17 +238,41 @@ class RevealCardScreen extends ConsumerWidget {
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        s.gamePickCorrectMeaning,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      ...List.generate(game.meaningOptions.length, (int i) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _meaningTile(ref, index: i, game: game),
-                        );
-                      }),
+                      if (game.useFillBlankOnReveal &&
+                          game.fillBlankSentenceDisplay != null) ...<Widget>[
+                        Text(
+                          s.gameFillBlankPrompt,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        UrduText(
+                          game.fillBlankSentenceDisplay!,
+                          style: AppTextStyles.urduBody.copyWith(
+                            fontSize: 18,
+                            height: 2.2,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                        const SizedBox(height: 12),
+                        ...List.generate(game.meaningOptions.length, (int i) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _meaningTile(ref, index: i, game: game),
+                          );
+                        }),
+                      ] else ...<Widget>[
+                        Text(
+                          s.gamePickCorrectMeaning,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        ...List.generate(game.meaningOptions.length, (int i) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _meaningTile(ref, index: i, game: game),
+                          );
+                        }),
+                      ],
                     ],
                   ],
                 ),

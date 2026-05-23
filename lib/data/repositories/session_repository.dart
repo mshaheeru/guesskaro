@@ -26,8 +26,12 @@ class SessionRepository {
     required int meaningTimeSeconds,
     required int meaningPointsEarned,
     required int totalPointsEarned,
+    int? masteryLevel,
+    String? lastSeenAt,
+    int? timesCorrect,
+    int? timesSeen,
   }) async {
-    await _client.from('user_progress').upsert(<String, dynamic>{
+    final Map<String, dynamic> payload = <String, dynamic>{
       'user_id': userId,
       'phrase_id': phraseId,
       'photo_guess_correct': photoGuessCorrect,
@@ -38,7 +42,16 @@ class SessionRepository {
       'meaning_points_earned': meaningPointsEarned,
       'total_points_earned': totalPointsEarned,
       'played_at': DateTime.now().toIso8601String(),
-    }, onConflict: 'user_id,phrase_id');
+    };
+    if (masteryLevel != null) payload['mastery_level'] = masteryLevel;
+    if (lastSeenAt != null) payload['last_seen_at'] = lastSeenAt;
+    if (timesCorrect != null) payload['times_correct'] = timesCorrect;
+    if (timesSeen != null) payload['times_seen'] = timesSeen;
+
+    await _client.from('user_progress').upsert(
+      payload,
+      onConflict: 'user_id,phrase_id',
+    );
   }
 
   Future<void> saveFullSession({
@@ -78,6 +91,10 @@ class SessionRepository {
             meaningTimeSeconds: row['meaningTimeSeconds'] as int,
             meaningPointsEarned: row['meaningPointsEarned'] as int,
             totalPointsEarned: row['totalPointsEarned'] as int,
+            masteryLevel: row['mastery_level'] as int?,
+            lastSeenAt: row['last_seen_at'] as String?,
+            timesCorrect: row['times_correct'] as int?,
+            timesSeen: row['times_seen'] as int?,
           ),
         ),
       );
@@ -142,6 +159,10 @@ class SessionRepository {
               meaningTimeSeconds: pr['meaningTimeSeconds'] as int,
               meaningPointsEarned: pr['meaningPointsEarned'] as int,
               totalPointsEarned: pr['totalPointsEarned'] as int,
+              masteryLevel: pr['mastery_level'] as int?,
+              lastSeenAt: pr['last_seen_at'] as String?,
+              timesCorrect: pr['times_correct'] as int?,
+              timesSeen: pr['times_seen'] as int?,
             ),
           ),
         );

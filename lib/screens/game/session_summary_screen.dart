@@ -8,8 +8,8 @@ import '../../core/constants/scoring_constants.dart';
 import '../../core/layout/bottom_inset.dart';
 import '../../core/locale/ui_strings.dart';
 import '../../providers/game_provider.dart';
+import '../../providers/library_mastery_provider.dart';
 import '../../providers/profile_provider.dart';
-import '../../widgets/common/level_up_overlay.dart';
 import '../../widgets/common/game_pop_scope.dart';
 import '../../widgets/jp_button_ghost.dart';
 import '../../widgets/jp_button_primary.dart';
@@ -161,12 +161,10 @@ class SessionSummaryScreen extends ConsumerWidget {
                                   JpButtonGhost(
                                     label: s.gameHome,
                                     onPressed: () async {
-                                      ref
-                                          .read(levelUpProvider.notifier)
-                                          .state = false;
                                       await ref
                                           .read(gameNotifierProvider.notifier)
                                           .resetSession();
+                                      ref.invalidate(libraryMasterySummaryProvider);
                                       if (context.mounted) {
                                         context.go('/home');
                                       }
@@ -180,15 +178,6 @@ class SessionSummaryScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-            if (ref.watch(levelUpProvider) && p != null)
-              LevelUpOverlay(
-                level: p.level,
-                levelTitle: s.levelTitle(p.level, urUrduTitle: p.levelTitle),
-                titleText: s.levelUpTitle,
-                continueText: s.levelUpContinue,
-                onDismiss:
-                    () => ref.read(levelUpProvider.notifier).state = false,
-              ),
           ],
         ),
       ),

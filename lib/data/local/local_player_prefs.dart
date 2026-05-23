@@ -10,4 +10,7 @@ class LocalPlayerPrefs {
 
   /// `'ur'` | `'en'`.
   static const String keyAppLocale = 'app_locale_v1';
+
+  /// `'classic'` | `'sunny'`.
+  static const String keyAppTheme = 'app_theme_v1';
 }

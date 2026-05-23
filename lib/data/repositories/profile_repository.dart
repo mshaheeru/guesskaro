@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_config.dart';
+import '../../core/constants/leaderboard_metric.dart';
 import '../models/leaderboard_entry_model.dart';
 import '../models/profile_model.dart';
 
@@ -179,25 +180,53 @@ class ProfileRepository {
   static int _activityScore(DateTime? lastPlayed) =>
       lastPlayed?.millisecondsSinceEpoch ?? 0;
 
-  /// Computes 1-based rank: higher XP first; same XP → more recently active wins.
-  Future<int> leaderboardRankFor(ProfileModel profile) async {
+  int _metricValue(ProfileModel profile, LeaderboardMetric metric) {
+    switch (metric) {
+      case LeaderboardMetric.sessionStreak:
+        return profile.longestStreak;
+      case LeaderboardMetric.dailyStreak:
+        return profile.dayStreak;
+      case LeaderboardMetric.totalScore:
+        return profile.xp;
+    }
+  }
+
+  String _metricColumn(LeaderboardMetric metric) {
+    switch (metric) {
+      case LeaderboardMetric.sessionStreak:
+        return 'longest_streak';
+      case LeaderboardMetric.dailyStreak:
+        return 'day_streak';
+      case LeaderboardMetric.totalScore:
+        return 'xp';
+    }
+  }
+
+  /// Computes 1-based rank for [metric]; ties broken by more recent activity.
+  Future<int> leaderboardRankFor(
+    ProfileModel profile, {
+    LeaderboardMetric metric = LeaderboardMetric.totalScore,
+  }) async {
     if (!kAuthEnabled) return 1;
 
-    final PostgrestResponse<List<dynamic>> strictlyHigherXp = await _client
+    final String column = _metricColumn(metric);
+    final int myScore = _metricValue(profile, metric);
+
+    final PostgrestResponse<List<dynamic>> strictlyHigher = await _client
         .from('profiles')
         .select('id')
-        .gt('xp', profile.xp)
+        .gt(column, myScore)
         .count(CountOption.exact);
-    final int higherXpBand = strictlyHigherXp.count;
+    final int higherBand = strictlyHigher.count;
 
-    final List<dynamic> sameXpRows = await _client
+    final List<dynamic> sameRows = await _client
         .from('profiles')
         .select('id, last_played_date')
-        .eq('xp', profile.xp);
+        .eq(column, myScore);
 
     final int myAct = _activityScore(profile.lastPlayedDate);
     int tieAhead = 0;
-    for (final dynamic row in sameXpRows) {
+    for (final dynamic row in sameRows) {
       final Map<String, dynamic> map = Map<String, dynamic>.from(row as Map);
       if ((map['id'] as String) == profile.id) continue;
       final DateTime? otherLast =
@@ -207,7 +236,7 @@ class ProfileRepository {
       if (_activityScore(otherLast) > myAct) tieAhead++;
     }
 
-    return higherXpBand + tieAhead + 1;
+    return higherBand + tieAhead + 1;
   }
 
   LeaderboardScreenData _leaderboardFromRpc(Map<String, dynamic> raw) {
@@ -239,6 +268,7 @@ class ProfileRepository {
                 : 'Player',
         xp: (ym['xp'] as num?)?.toInt() ?? 0,
         streak: (ym['longest_streak'] as num?)?.toInt() ?? 0,
+        dayStreak: (ym['day_streak'] as num?)?.toInt() ?? 0,
         coins: (ym['coins'] as num?)?.toInt() ?? 0,
         rank: (ym['rank'] as num?)?.toInt() ?? 1,
       );
@@ -250,21 +280,23 @@ class ProfileRepository {
   /// Fallback when RPC missing / not migrated — sees only rows allowed by RLS.
   Future<LeaderboardScreenData> fetchLeaderboardScreenDataFromProfilesTable({
     String? signedInUserId,
+    LeaderboardMetric metric = LeaderboardMetric.totalScore,
   }) async {
     final List<LeaderboardEntryModel> top =
-        await fetchTopLeaderboard(limit: 10);
+        await fetchTopLeaderboard(limit: 10, metric: metric);
 
     LeaderboardEntryModel? youRow;
     if (signedInUserId != null) {
       final ProfileModel? p = await fetchProfile(signedInUserId);
       if (p != null) {
-        final int rank = await leaderboardRankFor(p);
+        final int rank = await leaderboardRankFor(p, metric: metric);
         youRow = LeaderboardEntryModel(
           userId: p.id,
           displayName:
               p.displayName.trim().isNotEmpty ? p.displayName.trim() : 'Player',
           xp: p.xp,
           streak: p.longestStreak,
+          dayStreak: p.dayStreak,
           coins: p.coins,
           rank: rank,
         );
@@ -274,15 +306,25 @@ class ProfileRepository {
     return LeaderboardScreenData(top: top, you: youRow);
   }
 
-  /// Top `[limit]` globally by XP, then recent `last_played_date` among ties.
-  Future<List<LeaderboardEntryModel>> fetchTopLeaderboard({int limit = 10}) async {
+  /// Top `[limit]` for the given [metric].
+  Future<List<LeaderboardEntryModel>> fetchTopLeaderboard({
+    int limit = 10,
+    LeaderboardMetric metric = LeaderboardMetric.totalScore,
+  }) async {
     if (!kAuthEnabled) return <LeaderboardEntryModel>[];
+
+    final String orderColumn = switch (metric) {
+      LeaderboardMetric.sessionStreak => 'longest_streak',
+      LeaderboardMetric.dailyStreak => 'day_streak',
+      LeaderboardMetric.totalScore => 'xp',
+    };
+
     final List<dynamic> rows = await _client
         .from('profiles')
         .select(
-          'id, display_name, xp, longest_streak, coins, last_played_date',
+          'id, display_name, xp, longest_streak, day_streak, coins, last_played_date',
         )
-        .order('xp', ascending: false)
+        .order(orderColumn, ascending: false)
         .order(
           'last_played_date',
           ascending: false,
@@ -304,12 +346,54 @@ class ProfileRepository {
     return out;
   }
 
-  /// Prefer [leaderboard_bundle] RPC — bypasses restrictive `profiles` RLS.
-  Future<LeaderboardScreenData> fetchLeaderboardScreenData({
+  Future<LeaderboardScreenData> fetchLeaderboardForMetric({
+    required LeaderboardMetric metric,
     String? signedInUserId,
+    int limit = 10,
   }) async {
     if (!kAuthEnabled) {
       return const LeaderboardScreenData(top: <LeaderboardEntryModel>[], you: null);
+    }
+
+    final List<LeaderboardEntryModel> top =
+        await fetchTopLeaderboard(limit: limit, metric: metric);
+
+    LeaderboardEntryModel? youRow;
+    if (signedInUserId != null) {
+      final ProfileModel? p = await fetchProfile(signedInUserId);
+      if (p != null) {
+        final int rank = await leaderboardRankFor(p, metric: metric);
+        youRow = LeaderboardEntryModel(
+          userId: p.id,
+          displayName:
+              p.displayName.trim().isNotEmpty ? p.displayName.trim() : 'Player',
+          xp: p.xp,
+          streak: p.longestStreak,
+          dayStreak: p.dayStreak,
+          coins: p.coins,
+          rank: rank,
+        );
+      }
+    }
+
+    return LeaderboardScreenData(top: top, you: youRow);
+  }
+
+  /// Prefer [leaderboard_bundle] RPC — bypasses restrictive `profiles` RLS.
+  /// Falls back to [fetchLeaderboardForMetric] (total score / XP).
+  Future<LeaderboardScreenData> fetchLeaderboardScreenData({
+    String? signedInUserId,
+    LeaderboardMetric metric = LeaderboardMetric.totalScore,
+  }) async {
+    if (!kAuthEnabled) {
+      return const LeaderboardScreenData(top: <LeaderboardEntryModel>[], you: null);
+    }
+
+    if (metric != LeaderboardMetric.totalScore) {
+      return fetchLeaderboardForMetric(
+        metric: metric,
+        signedInUserId: signedInUserId,
+      );
     }
 
     try {
@@ -329,6 +413,7 @@ class ProfileRepository {
 
     return fetchLeaderboardScreenDataFromProfilesTable(
       signedInUserId: signedInUserId,
+      metric: metric,
     );
   }
 

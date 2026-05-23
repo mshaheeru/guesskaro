@@ -14,13 +14,16 @@ import '../../data/local/cache_service.dart';
 import '../../data/repositories/local_profile_repository.dart';
 import '../../data/repositories/profile_repository.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/theme/app_theme_variant.dart';
 import '../../providers/locale_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../providers/local_guest_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../widgets/common/urdu_text.dart';
 import '../../widgets/custom_toggle_switch.dart';
 import '../../core/navigation/main_bottom_tab_nav.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/jp_screen_background.dart';
 import '../../widgets/jp_button_ghost.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -69,10 +72,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final profile = ref.watch(profileNotifierProvider).valueOrNull;
     final UiStrings s = UiStrings.watch(ref);
     final AppLang lang = ref.watch(appLangNotifierProvider);
+    final AppThemeVariant themeVariant = ref.watch(appThemeVariantProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      body: ListView(
+      body: JpScreenBackground(
+        child: ListView(
         padding: EdgeInsets.fromLTRB(0, 16, 0, bottomInsetGap(context)),
         children: [
           Padding(
@@ -99,15 +104,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-            child: Text(
-              'Settings',
-              style: AppTextStyles.enTitle.copyWith(fontSize: 26),
-            ),
+            child: s.isEnglish
+                ? Text(
+                    s.settingsTitle,
+                    style: AppTextStyles.enTitle.copyWith(fontSize: 26),
+                  )
+                : UrduText(
+                    s.settingsTitle,
+                    style: AppTextStyles.urduTitle.copyWith(fontSize: 24),
+                    textAlign: TextAlign.start,
+                  ),
           ),
           _SettingsSection(
-            title: 'Language',
+            isEnglish: s.isEnglish,
+            title: s.settingsSectionLanguage,
             rows: <Widget>[
               _SettingsRow(
+                isEnglish: s.isEnglish,
                 label: s.uiLanguage,
                 right: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -135,9 +148,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
           _SettingsSection(
-            title: 'Gameplay',
+            isEnglish: s.isEnglish,
+            title: s.settingsSectionAppearance,
             rows: <Widget>[
               _SettingsRow(
+                isEnglish: s.isEnglish,
+                label: s.appThemeLabel,
+                border: false,
+                right: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    _LangPill(
+                      label: s.themeClassicLabel,
+                      active: themeVariant == AppThemeVariant.classic,
+                      onTap:
+                          () => ref
+                              .read(appThemeVariantProvider.notifier)
+                              .setVariant(AppThemeVariant.classic),
+                    ),
+                    const SizedBox(width: 8),
+                    _LangPill(
+                      label: s.themeSunnyLabel,
+                      active: themeVariant == AppThemeVariant.sunny,
+                      onTap:
+                          () => ref
+                              .read(appThemeVariantProvider.notifier)
+                              .setVariant(AppThemeVariant.sunny),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          _SettingsSection(
+            isEnglish: s.isEnglish,
+            title: s.gameplaySection,
+            rows: <Widget>[
+              _SettingsRow(
+                isEnglish: s.isEnglish,
                 label: s.sound,
                 right: CustomToggleSwitch(
                   value: _sound,
@@ -157,6 +205,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               _SettingsRow(
+                isEnglish: s.isEnglish,
                 label: s.haptic,
                 right: CustomToggleSwitch(
                   value: _haptic,
@@ -167,8 +216,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               _SettingsRow(
-                label: 'Time based mode',
-                sublabel: 'Show countdowns in game rounds',
+                isEnglish: s.isEnglish,
+                label: s.timedModeTitle,
+                sublabel: s.timedModeSubtitle,
                 right: CustomToggleSwitch(
                   value: _timedModeEnabled,
                   onChanged: (v) async {
@@ -181,18 +231,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
           _SettingsSection(
-            title: 'Account',
+            isEnglish: s.isEnglish,
+            title: s.accountSection,
             rows: <Widget>[
               _SettingsRow(
+                isEnglish: s.isEnglish,
+                romanSublabel: true,
                 label: s.changeName,
                 sublabel: profile?.displayName ?? '',
-                right: const Icon(
+                right: Icon(
                   Icons.edit_rounded,
                   color: AppColors.textSecondary,
                 ),
                 onTap: profile == null ? null : () => _changeName(context, s),
               ),
               _SettingsRow(
+                isEnglish: s.isEnglish,
                 label: s.changeAvatar,
                 right: const Text('😊', style: TextStyle(fontSize: 20)),
                 onTap: profile == null ? null : () => _changeAvatar(context, s),
@@ -201,15 +255,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
           _SettingsSection(
-            title: 'About',
+            isEnglish: s.isEnglish,
+            title: s.settingsSectionAbout,
             rows: <Widget>[
               _SettingsRow(
+                isEnglish: s.isEnglish,
+                romanSublabel: true,
                 label: s.appVersion,
                 right: Text(_version, style: AppTextStyles.enCaption),
               ),
               _SettingsRow(
+                isEnglish: s.isEnglish,
                 label: s.clearCache,
-                right: const Icon(
+                right: Icon(
                   Icons.cleaning_services_rounded,
                   color: AppColors.textSecondary,
                 ),
@@ -226,6 +284,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
         ],
+      ),
       ),
       bottomNavigationBar: BottomNavBar(
         selectedIndex: 2,
@@ -413,10 +472,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 }
 
 class _SettingsSection extends StatelessWidget {
-  const _SettingsSection({required this.title, required this.rows});
+  const _SettingsSection({
+    required this.title,
+    required this.rows,
+    required this.isEnglish,
+  });
 
   final String title;
   final List<Widget> rows;
+  final bool isEnglish;
 
   @override
   Widget build(BuildContext context) {
@@ -426,8 +490,17 @@ class _SettingsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(title, style: AppTextStyles.enLabel),
+            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 8),
+            child: isEnglish
+                ? Text(title, style: AppTextStyles.enLabel)
+                : UrduText(
+                    title,
+                    style: AppTextStyles.urduBody.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
           ),
           Container(
             decoration: BoxDecoration(
@@ -450,6 +523,8 @@ class _SettingsRow extends StatelessWidget {
     this.sublabel,
     this.border = true,
     this.onTap,
+    required this.isEnglish,
+    this.romanSublabel = false,
   });
 
   final String label;
@@ -457,6 +532,8 @@ class _SettingsRow extends StatelessWidget {
   final Widget right;
   final bool border;
   final VoidCallback? onTap;
+  final bool isEnglish;
+  final bool romanSublabel;
 
   @override
   Widget build(BuildContext context) {
@@ -467,7 +544,7 @@ class _SettingsRow extends StatelessWidget {
         decoration: BoxDecoration(
           border:
               border
-                  ? const Border(
+                  ? Border(
                     bottom: BorderSide(color: AppColors.borderSubtle),
                   )
                   : null,
@@ -479,14 +556,32 @@ class _SettingsRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(
-                    label,
-                    style: AppTextStyles.enBody.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
+                  isEnglish
+                      ? Text(
+                        label,
+                        style: AppTextStyles.enBody.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      )
+                      : UrduText(
+                        label,
+                        style: AppTextStyles.urduBody.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                        textAlign: TextAlign.start,
+                      ),
                   if (sublabel != null && sublabel!.isNotEmpty)
-                    Text(sublabel!, style: AppTextStyles.enCaption),
+                    romanSublabel || isEnglish
+                        ? Text(
+                          sublabel!,
+                          style: AppTextStyles.enCaption,
+                          textAlign: TextAlign.start,
+                        )
+                        : UrduText(
+                          sublabel!,
+                          style: AppTextStyles.urduCaption,
+                          textAlign: TextAlign.start,
+                        ),
                 ],
               ),
             ),
@@ -521,10 +616,16 @@ class _LangPill extends StatelessWidget {
           color:
               active
                   ? AppColors.orangeDim
-                  : Colors.white.withValues(alpha: 0.06),
+                  : (AppColors.isSunny
+                      ? AppColors.paperWarm
+                      : Colors.white.withValues(alpha: 0.06)),
           border: Border.all(
             color:
-                active ? AppColors.orange : Colors.white.withValues(alpha: 0.1),
+                active
+                    ? AppColors.orange
+                    : (AppColors.isSunny
+                        ? AppColors.ink.withValues(alpha: 0.2)
+                        : Colors.white.withValues(alpha: 0.1)),
             width: 1.5,
           ),
         ),

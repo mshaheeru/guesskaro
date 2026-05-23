@@ -3,8 +3,13 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/constants/app_config.dart';
+import '../../core/constants/mastery_constants.dart';
 import '../local/cache_service.dart';
 import '../models/phrase_model.dart';
+import '../models/user_progress_model.dart';
+
+part 'phrase_repository_mastery.dart';
 
 class PhraseRepository {
   PhraseRepository(this._cacheService);
@@ -51,11 +56,15 @@ class PhraseRepository {
     final bool hasMissingPhotoPhraseOptions = normalizedCached.any(
       (PhraseModel phrase) => phrase.photoWrongOptions.length < 3,
     );
+    final bool hasMissingBlankWordOptions = normalizedCached.any(
+      (PhraseModel phrase) => phrase.blankWordWrongOptions.length < 3,
+    );
     if (!_cacheService.shouldRefetch() &&
         normalizedCached.isNotEmpty &&
         !hasMissingPhotoUrls &&
         !hasLegacyIdPngUrls &&
-        !hasMissingPhotoPhraseOptions) {
+        !hasMissingPhotoPhraseOptions &&
+        !hasMissingBlankWordOptions) {
       final bool cacheChanged = normalizedCached.any(
         (PhraseModel phrase) =>
             phrase.imageUrl !=
@@ -104,15 +113,25 @@ class PhraseRepository {
 
       final Map<String, List<String>> wrongOptionsByPhraseId =
           <String, List<String>>{};
+      final Map<String, List<String>> blankWordWrongByPhraseId =
+          <String, List<String>>{};
       for (final dynamic row in wrongRows) {
         final Map<String, dynamic> optionMap = Map<String, dynamic>.from(
           row as Map,
         );
         final String phraseId = optionMap['phrase_id'] as String;
         final String optionText = optionMap['option_text'] as String;
-        wrongOptionsByPhraseId.putIfAbsent(phraseId, () => <String>[]).add(
-          optionText,
-        );
+        final String optionType =
+            (optionMap['option_type'] as String?) ?? 'meaning';
+        if (optionType == 'blank_word') {
+          blankWordWrongByPhraseId.putIfAbsent(phraseId, () => <String>[]).add(
+            optionText,
+          );
+        } else {
+          wrongOptionsByPhraseId.putIfAbsent(phraseId, () => <String>[]).add(
+            optionText,
+          );
+        }
       }
       final Map<String, List<String>> photoWrongOptionsByPhraseId =
           <String, List<String>>{};
@@ -134,6 +153,8 @@ class PhraseRepository {
               'wrong_options': wrongOptionsByPhraseId[row['id']] ?? <String>[],
               'photo_wrong_options':
                   photoWrongOptionsByPhraseId[row['id']] ?? <String>[],
+              'blank_word_wrong_options':
+                  blankWordWrongByPhraseId[row['id']] ?? <String>[],
             }),
           )
           .toList();
@@ -203,6 +224,44 @@ class PhraseRepository {
     final List<PhraseModel> session = filtered.toList()..shuffle();
     if (session.length <= count) return session;
     return session.take(count).toList();
+  }
+
+  /// Loads phrases in the order of [ids]; skips missing ids.
+  Future<List<PhraseModel>> fetchPhrasesByIds(List<String> ids) async {
+    if (ids.isEmpty) return <PhraseModel>[];
+
+    final List<PhraseModel> allPhrases = await fetchAllPhrases();
+    final Map<String, PhraseModel> byId = <String, PhraseModel>{
+      for (final PhraseModel p in allPhrases) p.id: p,
+    };
+
+    final List<PhraseModel> ordered = <PhraseModel>[];
+    for (final String id in ids) {
+      final PhraseModel? phrase = byId[id];
+      if (phrase != null) {
+        ordered.add(phrase);
+      }
+    }
+    return ordered;
+  }
+
+  /// Reverse mode: only phrases the user has reached mastery level 3+.
+  Future<List<PhraseModel>> getReverseSessionPhrases({
+    required String userId,
+    int count = 5,
+  }) async {
+    final List<PhraseModel> allPhrases = await fetchAllPhrases();
+    final Map<String, int> mastery = await getMasteryMap(userId);
+
+    final List<PhraseModel> eligible =
+        allPhrases
+            .where((PhraseModel p) => (mastery[p.id] ?? 0) >= 3)
+            .toList()
+          ..shuffle();
+
+    if (eligible.isEmpty) return <PhraseModel>[];
+    if (eligible.length <= count) return eligible;
+    return eligible.take(count).toList();
   }
 }
 

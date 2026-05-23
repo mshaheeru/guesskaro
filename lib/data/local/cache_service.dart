@@ -9,9 +9,14 @@ class CacheService {
   static const String _metaBoxName = 'app_meta_box';
   static const String _lastPhraseSyncKey = 'last_phrase_sync';
   static const String _onboardingSeenKey = 'has_seen_onboarding';
+  static const String _masteryBoxName = 'mastery_cache_box';
 
   late Box<dynamic> _phrasesBox;
   late Box<dynamic> _metaBox;
+  late Box<dynamic> _masteryBox;
+
+  static String masteryKey(String userId, String phraseId) =>
+      'mastery_${userId}_$phraseId';
 
   Future<void> init() async {
     if (Hive.isBoxOpen(_phrasesBoxName)) {
@@ -24,6 +29,75 @@ class CacheService {
       _metaBox = Hive.box<dynamic>(_metaBoxName);
     } else {
       _metaBox = await Hive.openBox<dynamic>(_metaBoxName);
+    }
+
+    if (Hive.isBoxOpen(_masteryBoxName)) {
+      _masteryBox = Hive.box<dynamic>(_masteryBoxName);
+    } else {
+      _masteryBox = await Hive.openBox<dynamic>(_masteryBoxName);
+    }
+  }
+
+  Map<String, dynamic>? getCachedMasteryEntry(String userId, String phraseId) {
+    final dynamic v = _masteryBox.get(masteryKey(userId, phraseId));
+    if (v is Map) {
+      return Map<String, dynamic>.from(v);
+    }
+    if (v is int) {
+      return <String, dynamic>{
+        'mastery_level': v,
+        'last_seen_at': DateTime.now().toIso8601String(),
+        'times_correct': 0,
+        'times_seen': 0,
+      };
+    }
+    return null;
+  }
+
+  int? getCachedMasteryLevel(String userId, String phraseId) {
+    final Map<String, dynamic>? e = getCachedMasteryEntry(userId, phraseId);
+    if (e == null) return null;
+    return e['mastery_level'] as int?;
+  }
+
+  Future<void> setCachedMasteryEntry(
+    String userId,
+    String phraseId, {
+    required int masteryLevel,
+    required DateTime lastSeenAt,
+    required int timesCorrect,
+    required int timesSeen,
+  }) async {
+    await _masteryBox.put(masteryKey(userId, phraseId), <String, dynamic>{
+      'mastery_level': masteryLevel,
+      'last_seen_at': lastSeenAt.toIso8601String(),
+      'times_correct': timesCorrect,
+      'times_seen': timesSeen,
+    });
+  }
+
+  Map<String, int> getAllCachedMasteryLevels(String userId) {
+    final String prefix = 'mastery_${userId}_';
+    final Map<String, int> out = <String, int>{};
+    for (final dynamic key in _masteryBox.keys) {
+      if (key is! String || !key.startsWith(prefix)) continue;
+      final Map<String, dynamic>? e = getCachedMasteryEntry(
+        userId,
+        key.substring(prefix.length),
+      );
+      if (e == null) continue;
+      out[key.substring(prefix.length)] = (e['mastery_level'] as int?) ?? 0;
+    }
+    return out;
+  }
+
+  Future<void> clearMasteryForUser(String userId) async {
+    final String prefix = 'mastery_${userId}_';
+    final List<dynamic> toRemove = _masteryBox.keys
+        .where((dynamic k) => k is String && k.startsWith(prefix))
+        .toList();
+    for (final dynamic k in toRemove) {
+      await _masteryBox.delete(k);
     }
   }
 
@@ -78,6 +152,7 @@ class CacheService {
   Future<void> clearAll() async {
     await _phrasesBox.clear();
     await _metaBox.clear();
+    await _masteryBox.clear();
   }
 
   /// Drops cached phrases only — keeps onboarding / guest prefs in [SharedPreferences].
